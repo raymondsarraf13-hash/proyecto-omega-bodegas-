@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proyecto Omega — Bodegas Guadalajara</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', 'Segoe UI', sans-serif; }
+  input[type=number]::-webkit-inner-spin-button { opacity: 1; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useMemo, useCallback } = React;
+
+const C = {
+  dark: "#445E6D", mid: "#719299", light: "#7C97A5", accent: "#E5934A",
+  bg: "#E9E9E9", green: "#008000", white: "#FFFFFF", black: "#1a1a1a",
+};
+
+const ASSETS = [
+  { id: "AVT032", name: "AVT032 – Avant 032", m2Rent: 920, terreno: 8132723, construccion: 7778571, basePrice: 145, startMonth: 13 },
+  { id: "AVT033", name: "AVT033 – Avant 033", m2Rent: 920, terreno: 8132723, construccion: 7778571, basePrice: 145, startMonth: 13 },
+  { id: "AVT034", name: "AVT034 – Avant 034", m2Rent: 920, terreno: 8132723, construccion: 7778571, basePrice: 145, startMonth: 13 },
+  { id: "AVT035", name: "AVT035 – Avant 035", m2Rent: 920, terreno: 8132723, construccion: 7778571, basePrice: 145, startMonth: 13 },
+  { id: "FPS008", name: "FPS008 – Flexpark Salto 008", m2Rent: 2055, terreno: 18668531, construccion: 17815493, basePrice: 168.2, startMonth: 7 },
+];
+
+function fmt(v, type = "currency") {
+  if (v == null || isNaN(v)) return "—";
+  if (type === "currency") return "$" + Math.round(v).toLocaleString("en-US");
+  if (type === "currencyM") return "$" + (v / 1e6).toFixed(2) + "M";
+  if (type === "pct") return (v * 100).toFixed(1) + "%";
+  if (type === "pctLong") return (v * 100).toFixed(3) + "%";
+  if (type === "moic") return v.toFixed(3) + "x";
+  if (type === "num") return v.toLocaleString("en-US", { maximumFractionDigits: 0 });
+  if (type === "price") return "$" + v.toFixed(1);
+  return String(v);
+}
+
+function computeModel({ switches, priceSens, occupancy, opex, discount, capRate, inflation }) {
+  const monthlyInf = inflation / 12;
+  const activeAssets = ASSETS.filter((_, i) => switches[i]);
+  const totalTerreno = activeAssets.reduce((s, a) => s + a.terreno, 0);
+  const totalConst = activeAssets.reduce((s, a) => s + a.construccion, 0);
+  const totalInv = totalTerreno + totalConst;
+  const totalM2 = activeAssets.reduce((s, a) => s + a.m2Rent, 0);
+
+  const revenue = new Array(11).fill(0);
+  for (const asset of activeAssets) {
+    for (let yi = 0; yi < 11; yi++) {
+      const months = yi === 0 ? [0] : Array.from({ length: 12 }, (_, k) => (yi - 1) * 12 + 1 + k);
+      for (const m of months) {
+        if (m >= asset.startMonth) {
+          revenue[yi] += asset.m2Rent * occupancy * asset.basePrice * (1 + priceSens) * Math.pow(1 + monthlyInf, m);
+        }
+      }
+    }
+  }
+  const noi = revenue.map((r) => r * (1 - opex));
+
+  const dRates = [discount - 0.02, discount - 0.01, discount, discount + 0.01, discount + 0.02];
+  const crS = [capRate, capRate + 0.01, capRate + 0.02];
+
+  const sOp = dRates.map((dr) => {
+    let vpFlows = 0;
+    for (let t = 1; t <= 10; t++) vpFlows += noi[t] / Math.pow(1 + dr, t);
+    return crS.map((cr) => {
+      const terminal = (noi[10] * (1 + inflation) / cr) / Math.pow(1 + dr, 10);
+      const value = (vpFlows + terminal) * Math.pow(1 + dr, 0.5);
+      const moic = totalInv > 0 ? value / totalInv : 0;
+      return { value, moic };
+    });
+  });
+
+  const crC = [capRate, capRate + 0.005, capRate + 0.01, capRate + 0.015, capRate + 0.02];
+
+  const cOp = dRates.map((dr) =>
+    crC.map((cr) =>
+      Array.from({ length: 10 }, (_, ti) => {
+        const t = ti + 1;
+        let vpNOI = 0;
+        for (let k = 1; k <= t; k++) vpNOI += noi[k] / Math.pow(1 + dr, k);
+        vpNOI *= Math.pow(1 + dr, 0.5);
+        const vpExit = (noi[t] / cr / Math.pow(1 + dr, t)) * Math.pow(1 + dr, 0.5);
+        const totalValue = vpNOI + vpExit;
+        const moic = totalInv > 0 ? totalValue / totalInv : 0;
+        return { vpNOI, vpExit, totalValue, moic };
+      })
+    )
+  );
+
+  const assetInfo = activeAssets.map((a) => ({ name: a.id, m2: a.m2Rent, price: a.basePrice * (1 + priceSens) }));
+  const wAvgPrice = totalM2 > 0 ? activeAssets.reduce((s, a) => s + a.m2Rent * a.basePrice * (1 + priceSens), 0) / totalM2 : 0;
+
+  return { totalInv, totalTerreno, totalConst, totalM2, wAvgPrice, noi, revenue, sOp, cOp, dRates, crS, crC, assetInfo };
+}
+
+const S = {
+  wrap: { fontFamily: "'DM Sans','Segoe UI',sans-serif", background: C.bg, minHeight: "100vh", color: C.black, fontSize: 13 },
+  hdr: { background: `linear-gradient(135deg,${C.dark},${C.mid})`, padding: "20px 28px", color: C.white },
+  h1: { fontSize: 22, fontWeight: 700, margin: 0, letterSpacing: 0.5 },
+  sub: { fontSize: 12, opacity: 0.7, marginTop: 4 },
+  card: { background: C.white, borderRadius: 8, padding: "18px 20px", boxShadow: "0 1px 4px rgba(0,0,0,.06)" },
+  secT: (col) => ({ fontSize: 14, fontWeight: 700, color: C.dark, marginBottom: 12, display: "flex", alignItems: "center", gap: 8, borderBottom: `2px solid ${col || C.accent}`, paddingBottom: 8 }),
+  lbl: { fontSize: 11, fontWeight: 600, color: C.mid, marginBottom: 4, display: "block", textTransform: "uppercase", letterSpacing: .3 },
+  inp: { width: "100%", padding: "7px 10px", border: `1.5px solid ${C.light}`, borderRadius: 5, fontSize: 13, color: C.dark, fontWeight: 600, background: C.white, boxSizing: "border-box", outline: "none" },
+  swR: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "5px 0", borderBottom: `1px solid ${C.bg}` },
+  tabs: { display: "flex", gap: 0, background: C.dark, borderRadius: "8px 8px 0 0", overflow: "hidden" },
+  tab: (a) => ({ padding: "10px 18px", cursor: "pointer", fontSize: 12, fontWeight: 600, color: a ? C.white : "rgba(255,255,255,.55)", background: a ? C.accent : "transparent" }),
+  tbl: { width: "100%", borderCollapse: "collapse", fontSize: 11 },
+  th: { padding: "6px 8px", textAlign: "right", fontWeight: 700, color: C.white, background: C.dark, fontSize: 10, whiteSpace: "nowrap" },
+  thL: { padding: "6px 8px", textAlign: "left", fontWeight: 700, color: C.white, background: C.dark, fontSize: 10 },
+  td: { padding: "5px 8px", textAlign: "right", borderBottom: `1px solid ${C.bg}`, whiteSpace: "nowrap" },
+  tdL: { padding: "5px 8px", textAlign: "left", borderBottom: `1px solid ${C.bg}`, fontWeight: 600, color: C.dark, whiteSpace: "nowrap" },
+  hi: { background: "rgba(229,147,74,.12)", fontWeight: 700 },
+  badge: (c) => ({ display: "inline-block", padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 700, color: C.white, background: c }),
+};
+
+function Toggle({ on, onClick }) {
+  return (
+    <div onClick={onClick} style={{ width: 38, height: 20, borderRadius: 10, background: on ? C.accent : C.light, cursor: "pointer", position: "relative", transition: "background .2s", flexShrink: 0 }}>
+      <div style={{ width: 16, height: 16, borderRadius: "50%", background: C.white, position: "absolute", top: 2, left: on ? 20 : 2, transition: "left .2s", boxShadow: "0 1px 3px rgba(0,0,0,.2)" }} />
+    </div>
+  );
+}
+
+function Inp({ label, value, onChange, suffix, step }) {
+  return (
+    <div>
+      <label style={S.lbl}>{label}</label>
+      <div style={{ position: "relative" }}>
+        <input type="number" style={{ ...S.inp, paddingRight: suffix ? 30 : 10 }} value={value} onChange={(e) => onChange(parseFloat(e.target.value) || 0)} step={step || 0.01} />
+        {suffix && <span style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", fontSize: 11, color: C.mid, fontWeight: 600 }}>{suffix}</span>}
+      </div>
+    </div>
+  );
+}
+
+function Moic({ v }) {
+  const col = v >= 1.5 ? C.green : v >= 1.2 ? C.accent : "#cc3333";
+  return <span style={{ color: col, fontWeight: 700 }}>{fmt(v, "moic")}</span>;
+}
+
+function App() {
+  const [sw, setSw] = useState([true, true, true, true, true]);
+  const [priceSens, setPriceSens] = useState(0);
+  const [occ, setOcc] = useState(1.0);
+  const [opex, setOpex] = useState(0.06);
+  const [disc, setDisc] = useState(0.12);
+  const [capR, setCapR] = useState(0.07458);
+  const [inf, setInf] = useState(0.05656);
+  const [tab, setTab] = useState("summary");
+
+  const toggleSw = useCallback((i) => setSw((p) => { const n = [...p]; n[i] = !n[i]; return n; }), []);
+
+  const m = useMemo(() => computeModel({ switches: sw, priceSens, occupancy: occ, opex, discount: disc, capRate: capR, inflation: inf }), [sw, priceSens, occ, opex, disc, capR, inf]);
+
+  const baseSop = m.sOp[2] && m.sOp[2][0] ? m.sOp[2][0] : { value: 0, moic: 0 };
+  const baseCop5 = m.cOp[2] && m.cOp[2][0] && m.cOp[2][0][4] ? m.cOp[2][0][4] : { totalValue: 0, moic: 0 };
+  const baseCop10 = m.cOp[2] && m.cOp[2][0] && m.cOp[2][0][9] ? m.cOp[2][0][9] : { totalValue: 0, moic: 0 };
+  const g3 = { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 };
+  const g2 = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 };
+
+  const noiSlice = m.noi.slice(1);
+  const maxNOI = Math.max.apply(null, noiSlice);
+  const minNOI = Math.min.apply(null, noiSlice.filter(function(v){return v > 0;})) || 0;
+  const chartMin = minNOI * 0.85;
+
+  return (
+    <div style={S.wrap}>
+      <div style={S.hdr}>
+        <h1 style={S.h1}>PROYECTO OMEGA — Bodegas Guadalajara</h1>
+        <div style={S.sub}>Modelo de Valuación Interactivo &nbsp;|&nbsp; MXN &nbsp;|&nbsp; Horizonte 10 años</div>
+      </div>
+      <div style={{ padding: "16px 20px" }}>
+
+        <div style={{ ...g2, marginBottom: 14 }}>
+          <div style={S.card}>
+            <div style={S.secT(C.dark)}><span style={S.badge(C.dark)}>BP</span>Supuestos</div>
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ ...S.lbl, marginBottom: 8 }}>Selección de Activos</label>
+              {ASSETS.map((a, i) => (
+                <div key={a.id} style={S.swR}>
+                  <span style={{ fontSize: 12, color: C.dark, fontWeight: 500 }}>{a.name}</span>
+                  <Toggle on={sw[i]} onClick={() => toggleSw(i)} />
+                </div>
+              ))}
+            </div>
+            <div style={{ ...g3, marginBottom: 14 }}>
+              <Inp label="Δ Precio Renta (%)" value={(priceSens * 100).toFixed(1)} onChange={(v) => setPriceSens(v / 100)} suffix="%" step={1} />
+              <Inp label="Ocupación (%)" value={(occ * 100).toFixed(1)} onChange={(v) => setOcc(v / 100)} suffix="%" step={5} />
+              <Inp label="OpEx + G&A (% Ing)" value={(opex * 100).toFixed(1)} onChange={(v) => setOpex(v / 100)} suffix="%" step={1} />
+            </div>
+            <div style={g3}>
+              <Inp label="Tasa de Descuento" value={(disc * 100).toFixed(1)} onChange={(v) => setDisc(v / 100)} suffix="%" step={0.5} />
+              <Inp label="Cap Rate" value={(capR * 100).toFixed(3)} onChange={(v) => setCapR(v / 100)} suffix="%" step={0.1} />
+              <Inp label="Inflación (INPC)" value={(inf * 100).toFixed(3)} onChange={(v) => setInf(v / 100)} suffix="%" step={0.1} />
+            </div>
+          </div>
+
+          <div style={S.card}>
+            <div style={S.secT(C.accent)}><span style={S.badge(C.accent)}>INFO</span>Información del Portafolio</div>
+            <div style={{ background: C.bg, borderRadius: 8, padding: "10px 14px", textAlign: "center", marginBottom: 14 }}>
+              <div style={{ fontSize: 10, color: C.mid, textTransform: "uppercase", letterSpacing: .3 }}>Inversión Total</div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: C.dark }}>{fmt(m.totalInv, "currencyM")}</div>
+            </div>
+            <div style={{ ...g2, marginBottom: 14 }}>
+              <div>
+                <label style={S.lbl}>m² Disponibles Para Rentar</label>
+                <div style={{ background: C.bg, borderRadius: 6, padding: "8px 10px" }}>
+                  {m.assetInfo.map((a) => (
+                    <div key={a.name} style={{ display: "flex", justifyContent: "space-between", padding: "3px 0", fontSize: 12 }}>
+                      <span style={{ color: C.mid, fontWeight: 500 }}>{a.name}</span>
+                      <span style={{ fontWeight: 700, color: C.dark }}>{fmt(a.m2, "num")} m²</span>
+                    </div>
+                  ))}
+                  <div style={{ display: "flex", justifyContent: "space-between", padding: "5px 0 0", fontSize: 12, borderTop: `1.5px solid ${C.light}`, marginTop: 4 }}>
+                    <span style={{ fontWeight: 700, color: C.dark }}>Total</span>
+                    <span style={{ fontWeight: 800, color: C.accent }}>{fmt(m.totalM2, "num")} m²</span>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <label style={S.lbl}>Precio Prom. Renta ($/m²/mes)</label>
+                <div style={{ background: C.bg, borderRadius: 6, padding: "8px 10px" }}>
+                  {m.assetInfo.map((a) => (
+                    <div key={a.name} style={{ display: "flex", justifyContent: "space-between", padding: "3px 0", fontSize: 12 }}>
+                      <span style={{ color: C.mid, fontWeight: 500 }}>{a.name}</span>
+                      <span style={{ fontWeight: 700, color: C.dark }}>{fmt(a.price, "price")}</span>
+                    </div>
+                  ))}
+                  <div style={{ display: "flex", justifyContent: "space-between", padding: "5px 0 0", fontSize: 12, borderTop: `1.5px solid ${C.light}`, marginTop: 4 }}>
+                    <span style={{ fontWeight: 700, color: C.dark }}>Prom. Pond.</span>
+                    <span style={{ fontWeight: 800, color: C.accent }}>{fmt(m.wAvgPrice, "price")}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <label style={S.lbl}>NOI Anual (MXN)</label>
+              <div style={{ display: "flex", alignItems: "flex-end", gap: 3, height: 90, marginTop: 6, padding: "0 2px" }}>
+                {noiSlice.map((v, i) => {
+                  const range = maxNOI - chartMin;
+                  const h = range > 0 && v > 0 ? ((v - chartMin) / range) * 100 : 0;
+                  return (
+                    <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 0 }}>
+                      <span style={{ fontSize: 8, fontWeight: 700, color: C.dark, marginBottom: 2, whiteSpace: "nowrap" }}>
+                        {v > 0 ? (v / 1e6).toFixed(1) + "M" : "—"}
+                      </span>
+                      <div style={{ width: "100%", height: Math.max(h, 4) + "%", background: "linear-gradient(180deg," + C.accent + "," + C.mid + ")", borderRadius: "3px 3px 0 0", transition: "height .3s", minHeight: v > 0 ? 6 : 0 }} />
+                      <span style={{ fontSize: 8, color: C.mid, marginTop: 2 }}>{2026 + i}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style={S.tabs}>
+          {[["summary", "Resumen Side-by-Side"], ["sop", "Valor s/ Operación"], ["cop", "Valor c/ Operación"]].map(function(item) {
+            var k = item[0], l = item[1];
+            return <div key={k} style={S.tab(tab === k)} onClick={() => setTab(k)}>{l}</div>;
+          })}
+        </div>
+        <div style={{ ...S.card, borderRadius: "0 0 8px 8px", marginTop: 0 }}>
+
+          {tab === "summary" && (
+            <div>
+              <div style={{ textAlign: "center", marginBottom: 16 }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: C.dark }}>Comparativo: Sin Operación vs. Con Operación</span>
+                <div style={{ fontSize: 10, color: C.mid, marginTop: 2 }}>Tasa: {fmt(disc, "pct")} | Cap Rate: {fmt(capR, "pctLong")} | Inversión: {fmt(m.totalInv, "currencyM")}</div>
+              </div>
+              <div style={g2}>
+                <div style={{ border: "2px solid " + C.dark, borderRadius: 8, overflow: "hidden" }}>
+                  <div style={{ background: C.dark, color: C.white, padding: "8px 14px", fontWeight: 700, fontSize: 13 }}>Valor s/ Operación</div>
+                  <div style={{ padding: 14 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: C.dark, marginBottom: 4 }}>Valor de Venta (MXN)</div>
+                    <div style={{ overflowX: "auto", marginBottom: 12 }}>
+                      <table style={S.tbl}>
+                        <thead><tr><th style={S.thL}>Tasa Desc.</th>{m.crS.map((cr, j) => <th key={j} style={S.th}>CR {fmt(cr, "pctLong")}</th>)}</tr></thead>
+                        <tbody>{m.dRates.map((dr, i) => (
+                          <tr key={i} style={i === 2 ? S.hi : {}}>
+                            <td style={S.tdL}>{fmt(dr, "pct")}</td>
+                            {m.sOp[i].map((c, j) => <td key={j} style={S.td}>{fmt(c.value, "currencyM")}</td>)}
+                          </tr>
+                        ))}</tbody>
+                      </table>
+                    </div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: C.dark, marginBottom: 4 }}>MOIC</div>
+                    <div style={{ overflowX: "auto" }}>
+                      <table style={S.tbl}>
+                        <thead><tr><th style={S.thL}>Tasa Desc.</th>{m.crS.map((cr, j) => <th key={j} style={S.th}>CR {fmt(cr, "pctLong")}</th>)}</tr></thead>
+                        <tbody>{m.dRates.map((dr, i) => (
+                          <tr key={i} style={i === 2 ? S.hi : {}}>
+                            <td style={S.tdL}>{fmt(dr, "pct")}</td>
+                            {m.sOp[i].map((c, j) => <td key={j} style={S.td}><Moic v={c.moic} /></td>)}
+                          </tr>
+                        ))}</tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+                <div style={{ border: "2px solid " + C.accent, borderRadius: 8, overflow: "hidden" }}>
+                  <div style={{ background: C.accent, color: C.white, padding: "8px 14px", fontWeight: 700, fontSize: 13 }}>Valor c/ Operación</div>
+                  <div style={{ padding: 14 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: C.dark, marginBottom: 4 }}>Valor de Venta (MXN) — Tasa: {fmt(disc, "pct")}</div>
+                    <div style={{ overflowX: "auto", marginBottom: 12 }}>
+                      <table style={S.tbl}>
+                        <thead><tr><th style={S.thL}>CapRate</th>{[1, 3, 5, 7, 10].map((y) => <th key={y} style={S.th}>Año {y}</th>)}</tr></thead>
+                        <tbody>{m.crC.map((cr, ci) => (
+                          <tr key={ci} style={ci === 0 ? S.hi : {}}>
+                            <td style={S.tdL}>{fmt(cr, "pctLong")}</td>
+                            {[0, 2, 4, 6, 9].map((yi) => <td key={yi} style={S.td}>{fmt(m.cOp[2] && m.cOp[2][ci] && m.cOp[2][ci][yi] ? m.cOp[2][ci][yi].totalValue : 0, "currencyM")}</td>)}
+                          </tr>
+                        ))}</tbody>
+                      </table>
+                    </div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: C.dark, marginBottom: 4 }}>MOIC — Tasa: {fmt(disc, "pct")}</div>
+                    <div style={{ overflowX: "auto" }}>
+                      <table style={S.tbl}>
+                        <thead><tr><th style={S.thL}>CapRate</th>{[1, 3, 5, 7, 10].map((y) => <th key={y} style={S.th}>Año {y}</th>)}</tr></thead>
+                        <tbody>{m.crC.map((cr, ci) => (
+                          <tr key={ci} style={ci === 0 ? S.hi : {}}>
+                            <td style={S.tdL}>{fmt(cr, "pctLong")}</td>
+                            {[0, 2, 4, 6, 9].map((yi) => <td key={yi} style={S.td}><Moic v={m.cOp[2] && m.cOp[2][ci] && m.cOp[2][ci][yi] ? m.cOp[2][ci][yi].moic : 0} /></td>)}
+                          </tr>
+                        ))}</tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {tab === "sop" && (
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: C.dark, marginBottom: 4 }}>Valor s/ Operación — Venta inmediata sin operar</div>
+              <div style={{ fontSize: 10, color: C.mid, marginBottom: 14 }}>Valor = VP(NOI) + VP(Terminal) con Mid-Year Adjustment</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: C.dark, marginBottom: 6 }}>Valor de Venta (Mid-Year Adj.)</div>
+              <div style={{ overflowX: "auto" }}>
+                <table style={S.tbl}>
+                  <thead><tr><th style={S.thL}>Tasa Desc.</th>{m.crS.map((cr, j) => <th key={j} style={S.th}>CR {fmt(cr, "pctLong")}</th>)}</tr></thead>
+                  <tbody>{m.dRates.map((dr, i) => (
+                    <tr key={i} style={i === 2 ? S.hi : {}}>
+                      <td style={S.tdL}>{fmt(dr, "pct")}</td>
+                      {m.sOp[i].map((c, j) => <td key={j} style={S.td}>{fmt(c.value, "currencyM")}</td>)}
+                    </tr>
+                  ))}</tbody>
+                </table>
+              </div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: C.dark, marginBottom: 6, marginTop: 16 }}>MOIC</div>
+              <div style={{ overflowX: "auto" }}>
+                <table style={S.tbl}>
+                  <thead><tr><th style={S.thL}>Tasa Desc.</th>{m.crS.map((cr, j) => <th key={j} style={S.th}>CR {fmt(cr, "pctLong")}</th>)}</tr></thead>
+                  <tbody>{m.dRates.map((dr, i) => (
+                    <tr key={i} style={i === 2 ? S.hi : {}}>
+                      <td style={S.tdL}>{fmt(dr, "pct")}</td>
+                      {m.sOp[i].map((c, j) => <td key={j} style={S.td}><Moic v={c.moic} /></td>)}
+                    </tr>
+                  ))}</tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {tab === "cop" && (
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: C.dark, marginBottom: 4 }}>Valor c/ Operación — Operar y vender en diferentes años</div>
+              <div style={{ fontSize: 10, color: C.mid, marginBottom: 14 }}>Valor = VP(NOI acumulado) + VP(Valor de Salida) con Mid-Year Adjustment</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: C.dark, marginBottom: 6 }}>Valor de Venta por Año de Salida (Tasa: {fmt(disc, "pct")})</div>
+              <div style={{ overflowX: "auto" }}>
+                <table style={S.tbl}>
+                  <thead><tr><th style={S.thL}>CapRate</th>{Array.from({ length: 10 }, (_, i) => <th key={i} style={S.th}>Año {i + 1}</th>)}</tr></thead>
+                  <tbody>{m.crC.map((cr, ci) => (
+                    <tr key={ci} style={ci === 0 ? S.hi : {}}>
+                      <td style={S.tdL}>{fmt(cr, "pctLong")}</td>
+                      {m.cOp[2][ci].map((c, yi) => <td key={yi} style={S.td}>{fmt(c.totalValue, "currencyM")}</td>)}
+                    </tr>
+                  ))}</tbody>
+                </table>
+              </div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: C.dark, marginBottom: 6, marginTop: 16 }}>MOIC por Año de Salida (Tasa: {fmt(disc, "pct")})</div>
+              <div style={{ overflowX: "auto" }}>
+                <table style={S.tbl}>
+                  <thead><tr><th style={S.thL}>CapRate</th>{Array.from({ length: 10 }, (_, i) => <th key={i} style={S.th}>Año {i + 1}</th>)}</tr></thead>
+                  <tbody>{m.crC.map((cr, ci) => (
+                    <tr key={ci} style={ci === 0 ? S.hi : {}}>
+                      <td style={S.tdL}>{fmt(cr, "pctLong")}</td>
+                      {m.cOp[2][ci].map((c, yi) => <td key={yi} style={S.td}><Moic v={c.moic} /></td>)}
+                    </tr>
+                  ))}</tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+        <div style={{ textAlign: "center", padding: "8px 0", fontSize: 10, color: C.mid }}>Proyecto Omega — Modelo de Valuación Interactivo | Datos base: Marzo 2026</div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
