@@ -206,6 +206,7 @@ function App(){
   var _di=useState(0.12),disc=_di[0],setDisc=_di[1];
   var _ca=useState(0.075),cap=_ca[0],setCap=_ca[1];
   var _ta=useState("summary"),tab=_ta[0],setTab=_ta[1];
+  var _si=useState(false),showInfo=_si[0],setShowInfo=_si[1];
 
   var toggleSw=useCallback(function(i){setSw(function(p){var n=p.slice();n[i]=!n[i];return n;});},[]);
   var m=useMemo(function(){return compute({sw:sw,ps:ps,occ:occ,opex:opex,disc:disc,cap:cap});},[sw,ps,occ,opex,disc,cap]);
@@ -225,6 +226,9 @@ function App(){
       <div>
         <h1 style={{fontSize:22,fontWeight:700,margin:0,letterSpacing:0.5}}>PROYECTO OMEGA — Bodegas Guadalajara</h1>
         <div style={{fontSize:12,opacity:0.7,marginTop:4}}>Modelo de Valuación Interactivo &nbsp;|&nbsp; MXN &nbsp;|&nbsp; Horizonte 10 años</div>
+        <div style={{marginTop:8}}>
+          <span onClick={function(){setShowInfo(true);}} style={{display:"inline-block",padding:"5px 14px",background:"rgba(255,255,255,0.2)",border:"1px solid rgba(255,255,255,0.4)",borderRadius:5,fontSize:11,fontWeight:600,color:C.white,cursor:"pointer",letterSpacing:0.3,transition:"background .2s"}}>ℹ  Información del Ejercicio</span>
+        </div>
       </div>
       <img src={LOGO} alt="RMR Capital" style={{height:60,objectFit:"contain"}}/>
     </div>
@@ -353,6 +357,58 @@ function App(){
       </div>
       <div style={{textAlign:"center",padding:"8px 0",fontSize:10,color:C.mid}}>Proyecto Omega — Modelo de Valuación Interactivo | Datos base: Marzo 2026</div>
     </div>
+
+    {/* INFO MODAL OVERLAY */}
+    {showInfo&&(
+      <div style={{position:"fixed",top:0,left:0,width:"100%",height:"100%",background:"rgba(0,0,0,0.5)",zIndex:1000,display:"flex",justifyContent:"center",alignItems:"flex-start",paddingTop:40,overflowY:"auto"}} onClick={function(){setShowInfo(false);}}>
+        <div style={{background:C.white,borderRadius:12,maxWidth:720,width:"90%",padding:"28px 32px",marginBottom:40,boxShadow:"0 8px 32px rgba(0,0,0,0.2)",position:"relative"}} onClick={function(e){e.stopPropagation();}}>
+          {/* Close button */}
+          <div onClick={function(){setShowInfo(false);}} style={{position:"absolute",top:14,right:18,width:28,height:28,borderRadius:"50%",background:C.bg,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:16,color:C.dark,fontWeight:700}}>✕</div>
+
+          {/* Logo + Title */}
+          <div style={{textAlign:"center",marginBottom:20}}>
+            <img src={LOGO} alt="RMR Capital" style={{height:50,objectFit:"contain",filter:"invert(40%) sepia(10%) saturate(500%) hue-rotate(160deg)",marginBottom:8}}/>
+            <div style={{fontSize:18,fontWeight:800,color:C.dark,letterSpacing:0.3}}>PROYECTO OMEGA</div>
+            <div style={{fontSize:11,color:C.mid}}>Bodegas Guadalajara — Modelo de Valuación Interactivo</div>
+          </div>
+
+          {/* Descripción */}
+          <div style={{marginBottom:24}}>
+            <div style={{fontSize:14,fontWeight:700,color:C.dark,marginBottom:8,display:"flex",alignItems:"center",gap:8,borderBottom:"2px solid "+C.accent,paddingBottom:8}}><span style={badge(C.dark)}>01</span>Descripción del Ejercicio</div>
+            <p style={{fontSize:12,color:C.black,lineHeight:1.7}}>
+              Modelo interactivo para la valuación de un portafolio de bodegas ubicadas en la zona metropolitana de Guadalajara. El ejercicio evalúa el valor presente del portafolio bajo dos escenarios: (1) venta inmediata sin operar los activos ("Valor s/ Operación"), donde el valor se determina por el VP de los flujos de NOI proyectados más un valor terminal descontado; y (2) operación y venta en diferentes horizontes de tiempo ("Valor c/ Operación"), donde se acumula el VP del NOI generado durante la operación más el VP del valor de salida al momento de una potencial venta. Ambos escenarios incorporan un ajuste de medio año (Mid-Year Convention) y permiten sensibilizar las variables clave del negocio y de valuación en tiempo real.
+            </p>
+          </div>
+
+          {/* Instrucciones */}
+          <div style={{marginBottom:24}}>
+            <div style={{fontSize:14,fontWeight:700,color:C.dark,marginBottom:8,display:"flex",alignItems:"center",gap:8,borderBottom:"2px solid "+C.accent,paddingBottom:8}}><span style={badge(C.dark)}>02</span>Instrucciones de Uso</div>
+            <p style={{fontSize:12,color:C.black,lineHeight:1.7,marginBottom:10}}>El panel de <strong>Supuestos</strong> permite modificar los parámetros del modelo:</p>
+            <div style={{background:C.bg,borderRadius:8,padding:"12px 16px",marginBottom:10}}>
+              <div style={{marginBottom:8}}><strong style={{color:C.dark}}>Selección de Activos:</strong> <span style={{color:C.black,fontSize:12}}>Activa o desactiva cada bodega del portafolio para evaluar combinaciones específicas de activos.</span></div>
+              <div style={{marginBottom:8}}><strong style={{color:C.dark}}>Δ Precio Renta (%):</strong> <span style={{color:C.black,fontSize:12}}>Ajusta la variación sobre el precio base de renta por m² (rango: −10% a +15%).</span></div>
+              <div style={{marginBottom:8}}><strong style={{color:C.dark}}>Ocupación (%):</strong> <span style={{color:C.black,fontSize:12}}>Define el porcentaje de ocupación asumido para el portafolio (rango: 0% a 100%).</span></div>
+              <div style={{marginBottom:8}}><strong style={{color:C.dark}}>OpEx + G&A (% Ing):</strong> <span style={{color:C.black,fontSize:12}}>Establece los gastos operativos y de administración como porcentaje de los ingresos brutos.</span></div>
+              <div style={{marginBottom:8}}><strong style={{color:C.dark}}>Tasa de Descuento:</strong> <span style={{color:C.black,fontSize:12}}>Costo de capital utilizado para descontar los flujos futuros (rango: 9.0% a 15.0%).</span></div>
+              <div><strong style={{color:C.dark}}>Cap Rate:</strong> <span style={{color:C.black,fontSize:12}}>Tasa de capitalización utilizada para calcular el valor terminal y los valores de salida (rango: 7.5% a 10.0%).</span></div>
+            </div>
+            <p style={{fontSize:12,color:C.black,lineHeight:1.7}}>
+              Los resultados se actualizan automáticamente al modificar cualquier supuesto. Las tres pestañas inferiores muestran: un resumen comparativo side-by-side, el detalle de valuación sin operación, y el detalle de valuación con operación. Las celdas resaltadas en verde indican los rangos de Tasa de Descuento (12.0%–14.0%) y Cap Rate (8.5%–9.5%) que representan los parámetros más probables de valuación por parte de inversionistas institucionales en el mercado mexicano.
+            </p>
+          </div>
+
+          {/* Disclaimer */}
+          <div>
+            <div style={{fontSize:14,fontWeight:700,color:C.dark,marginBottom:8,display:"flex",alignItems:"center",gap:8,borderBottom:"2px solid "+C.accent,paddingBottom:8}}><span style={badge(C.accent)}>!</span>Aviso Legal</div>
+            <div style={{background:C.bg,borderRadius:8,padding:"14px 18px",fontSize:11,color:C.dark,lineHeight:1.8,borderLeft:"3px solid "+C.accent}}>
+              <p style={{marginBottom:10}}>Este documento ha sido preparado por RMR Capital exclusivamente con fines informativos e indicativos. La información, supuestos, proyecciones y resultados aquí presentados no constituyen una oferta, solicitud, recomendación ni asesoría de inversión de ningún tipo. Los valores y rendimientos proyectados se basan en estimaciones y supuestos que pueden no materializarse y no representan una garantía de desempeño futuro. Los resultados reales pueden diferir materialmente de las proyecciones presentadas.</p>
+              <p style={{marginBottom:10}}>Este material es estrictamente confidencial y es propiedad exclusiva de RMR Capital. Queda prohibida su reproducción, distribución o divulgación total o parcial a terceros sin la autorización previa y por escrito de RMR Capital. Al acceder a este documento, el receptor acepta mantener la confidencialidad de su contenido y utilizarlo únicamente para los fines autorizados por RMR Capital.</p>
+              <p>RMR Capital no asume responsabilidad alguna por decisiones de inversión tomadas con base en la información aquí contenida. Se recomienda a los potenciales inversionistas realizar su propio análisis independiente y consultar a sus asesores legales, fiscales y financieros antes de tomar cualquier decisión de inversión.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
   </div>
   );
 }
