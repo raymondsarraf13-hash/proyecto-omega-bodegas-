@@ -3,202 +3,101 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Proyecto Omega — Bodegas Guadalajara</title>
+<title>Proyecto Omega</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'DM Sans', 'Segoe UI', sans-serif; }
-  input[type=number]::-webkit-inner-spin-button { opacity: 1; }
-  table { border-spacing: 0; }
-</style>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'DM Sans','Segoe UI',sans-serif}input[type=number]::-webkit-inner-spin-button{opacity:1}table{border-spacing:0}</style>
 </head>
 <body>
 <div id="root"></div>
 <script type="text/babel">
-const { useState, useMemo, useCallback } = React;
+const {useState,useMemo,useCallback}=React;
+const LOGO="data:image/png;base64,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";
+const LOGO_DARK="data:image/png;base64,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";
+const C={dark:"#445E6D",mid:"#719299",light:"#7C97A5",accent:"#E5934A",bg:"#E9E9E9",green:"#008000",white:"#FFFFFF",black:"#1a1a1a",hlGreen:"#2E7D32",hlBg:"rgba(46,125,50,0.10)"};
+const ASSETS=[{id:"AVT032",name:"AVT032 – Avant 032",m2:920,ter:8132723,con:7778571,bp:145,sm:13},{id:"AVT033",name:"AVT033 – Avant 033",m2:920,ter:8132723,con:7778571,bp:145,sm:13},{id:"AVT034",name:"AVT034 – Avant 034",m2:920,ter:8132723,con:7778571,bp:145,sm:13},{id:"AVT035",name:"AVT035 – Avant 035",m2:920,ter:8132723,con:7778571,bp:145,sm:13},{id:"FPS008",name:"FPS008 – Flexpark Salto 008",m2:2055,ter:18668531,con:17815493,bp:168.2,sm:7}];
+const INF=0.05656;
 
-const LOGO = "data:image/png;base64,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";
-
-const C = {
-  dark: "#445E6D", mid: "#719299", light: "#7C97A5", accent: "#E5934A",
-  bg: "#E9E9E9", green: "#008000", white: "#FFFFFF", black: "#1a1a1a",
-  hlGreen: "#2E7D32", hlBg: "rgba(46,125,50,0.10)",
-};
-
-const ASSETS = [
-  { id:"AVT032", name:"AVT032 – Avant 032", m2:920, ter:8132723, con:7778571, bp:145, sm:13 },
-  { id:"AVT033", name:"AVT033 – Avant 033", m2:920, ter:8132723, con:7778571, bp:145, sm:13 },
-  { id:"AVT034", name:"AVT034 – Avant 034", m2:920, ter:8132723, con:7778571, bp:145, sm:13 },
-  { id:"AVT035", name:"AVT035 – Avant 035", m2:920, ter:8132723, con:7778571, bp:145, sm:13 },
-  { id:"FPS008", name:"FPS008 – Flexpark Salto 008", m2:2055, ter:18668531, con:17815493, bp:168.2, sm:7 },
-];
-const INF = 0.05656;
-
-function fmt(v,t){
-  t=t||"currency";
-  if(v==null||isNaN(v))return "—";
-  if(t==="currencyM")return "$"+(v/1e6).toFixed(2)+"M";
-  if(t==="pct")return (v*100).toFixed(1)+"%";
-  if(t==="moic")return v.toFixed(3)+"x";
-  if(t==="num")return v.toLocaleString("en-US",{maximumFractionDigits:0});
-  if(t==="price")return "$"+v.toFixed(1);
-  return "$"+Math.round(v).toLocaleString("en-US");
-}
-
+function fmt(v,t){t=t||"currency";if(v==null||isNaN(v))return "—";if(t==="currencyM")return "$"+(v/1e6).toFixed(2)+"M";if(t==="pct")return(v*100).toFixed(1)+"%";if(t==="moic")return v.toFixed(3)+"x";if(t==="num")return v.toLocaleString("en-US",{maximumFractionDigits:0});if(t==="price")return "$"+v.toFixed(1);if(t==="full")return "$"+Math.round(v).toLocaleString("en-US");return "$"+Math.round(v).toLocaleString("en-US");}
 function inHL(dr,cr){return dr>=0.1195&&dr<=0.1405&&cr>=0.0845&&cr<=0.0955;}
-
-function compute(p){
-  var mi=INF/12, aa=ASSETS.filter(function(_,i){return p.sw[i];}),
-    tTer=0,tCon=0,tM2=0;
-  aa.forEach(function(a){tTer+=a.ter;tCon+=a.con;tM2+=a.m2;});
-  var tInv=tTer+tCon, rev=new Array(11).fill(0);
-  aa.forEach(function(a){
-    for(var yi=0;yi<11;yi++){
-      var ms=yi===0?[0]:Array.from({length:12},function(_,k){return(yi-1)*12+1+k;});
-      ms.forEach(function(m){if(m>=a.sm)rev[yi]+=a.m2*p.occ*a.bp*(1+p.ps)*Math.pow(1+mi,m);});
-    }
-  });
-  var noi=rev.map(function(r){return r*(1-p.opex);});
-  var dR=[p.disc-0.02,p.disc-0.01,p.disc,p.disc+0.01,p.disc+0.02],
-    crS=[p.cap,p.cap+0.01,p.cap+0.02],
-    crC=[p.cap,p.cap+0.005,p.cap+0.01,p.cap+0.015,p.cap+0.02];
-  var sOp=dR.map(function(dr){
-    var vp=0;for(var t=1;t<=10;t++)vp+=noi[t]/Math.pow(1+dr,t);
-    return crS.map(function(cr){
-      var tv=(noi[10]*(1+INF)/cr)/Math.pow(1+dr,10);
-      var val=(vp+tv)*Math.pow(1+dr,0.5);
-      return{value:val,moic:tInv>0?val/tInv:0};
-    });
-  });
-  var cOp=dR.map(function(dr){
-    return crC.map(function(cr){
-      return Array.from({length:10},function(_,ti){
-        var t=ti+1,vpN=0;
-        for(var k=1;k<=t;k++)vpN+=noi[k]/Math.pow(1+dr,k);
-        vpN*=Math.pow(1+dr,0.5);
-        var vpE=(noi[t]/cr/Math.pow(1+dr,t))*Math.pow(1+dr,0.5);
-        var tv=vpN+vpE;
-        return{totalValue:tv,moic:tInv>0?tv/tInv:0};
-      });
-    });
-  });
-  var ai=aa.map(function(a){return{name:a.id,m2:a.m2,price:a.bp*(1+p.ps)};});
-  var wP=tM2>0?aa.reduce(function(s,a){return s+a.m2*a.bp*(1+p.ps);},0)/tM2:0;
-  return{tInv:tInv,tTer:tTer,tCon:tCon,tM2:tM2,wP:wP,noi:noi,sOp:sOp,cOp:cOp,dR:dR,crS:crS,crC:crC,ai:ai};
-}
-
-/* ── Edge-aware highlight: outer borders only, GREEN ── */
-function sEdge(dR,crS,i,j){
-  if(!inHL(dR[i],crS[j]))return null;
-  return{
-    top:i===0||!inHL(dR[i-1],crS[j]),
-    bot:i===dR.length-1||!inHL(dR[i+1],crS[j]),
-    left:j===0||!inHL(dR[i],crS[j-1]),
-    right:j===crS.length-1||!inHL(dR[i],crS[j+1])
-  };
-}
-function cEdge(dR,crC,di,ci,yi,maxYi){
-  if(!inHL(dR[di],crC[ci]))return null;
-  return{
-    top:ci===0||!inHL(dR[di],crC[ci-1]),
-    bot:ci===crC.length-1||!inHL(dR[di],crC[ci+1]),
-    left:yi===0,
-    right:yi===maxYi
-  };
-}
-
-function eStyle(base,e){
-  if(!e)return base;
-  var b={};
-  if(e.top)b.borderTop="2.5px solid "+C.hlGreen;
-  if(e.bot)b.borderBottom="2.5px solid "+C.hlGreen;
-  if(e.left)b.borderLeft="2.5px solid "+C.hlGreen;
-  if(e.right)b.borderRight="2.5px solid "+C.hlGreen;
-  return Object.assign({},base,{background:C.hlBg},b);
-}
-
-/* ── Shared styles ── */
-var S={
-  wrap:{fontFamily:"'DM Sans','Segoe UI',sans-serif",background:C.bg,minHeight:"100vh",color:C.black,fontSize:13},
-  hdr:{background:"linear-gradient(135deg,"+C.dark+","+C.mid+")",padding:"20px 28px",color:C.white,display:"flex",justifyContent:"space-between",alignItems:"center"},
-  card:{background:C.white,borderRadius:8,padding:"18px 20px",boxShadow:"0 1px 4px rgba(0,0,0,.06)"},
-  lbl:{fontSize:11,fontWeight:600,color:C.mid,marginBottom:4,display:"block",textTransform:"uppercase",letterSpacing:.3},
-  inp:{width:"100%",padding:"7px 10px",border:"1.5px solid "+C.light,borderRadius:5,fontSize:13,color:C.dark,fontWeight:600,background:C.white,boxSizing:"border-box",outline:"none"},
-  swR:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"5px 0",borderBottom:"1px solid "+C.bg},
-  tabs:{display:"flex",gap:0,background:C.dark,borderRadius:"8px 8px 0 0",overflow:"hidden"},
-  tbl:{width:"100%",borderCollapse:"collapse",fontSize:11,tableLayout:"fixed"},
-  th:{padding:"6px 8px",textAlign:"right",fontWeight:700,color:C.white,background:C.dark,fontSize:10,whiteSpace:"nowrap"},
-  thL:{padding:"6px 8px",textAlign:"left",fontWeight:700,color:C.white,background:C.dark,fontSize:10},
-  td:{padding:"5px 8px",textAlign:"right",borderBottom:"1px solid "+C.bg,whiteSpace:"nowrap"},
-  tdL:{padding:"5px 8px",textAlign:"left",borderBottom:"1px solid "+C.bg,fontWeight:600,color:C.dark,whiteSpace:"nowrap"},
-  hi:{background:"rgba(229,147,74,.12)",fontWeight:700},
-};
-
-function Toggle(p){return(
-  <div onClick={p.onClick} style={{width:38,height:20,borderRadius:10,background:p.on?C.accent:C.light,cursor:"pointer",position:"relative",transition:"background .2s",flexShrink:0}}>
-    <div style={{width:16,height:16,borderRadius:"50%",background:C.white,position:"absolute",top:2,left:p.on?20:2,transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,.2)"}}/>
-  </div>
-);}
-
-function Inp(p){return(
-  <div><label style={S.lbl}>{p.label}</label>
-    <div style={{position:"relative"}}>
-      <input type="number" style={Object.assign({},S.inp,{paddingRight:p.suffix?30:10})} value={p.value} onChange={function(e){p.onChange(parseFloat(e.target.value)||0);}} step={p.step||0.01} min={p.min} max={p.max}/>
-      {p.suffix&&<span style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",fontSize:11,color:C.mid,fontWeight:600}}>{p.suffix}</span>}
-    </div>
-  </div>
-);}
-
-function Moic(p){var c=p.v>=1.5?C.green:p.v>=1.2?C.accent:"#cc3333";return<span style={{color:c,fontWeight:700}}>{fmt(p.v,"moic")}</span>;}
-
-function secT(col){return{fontSize:14,fontWeight:700,color:C.dark,marginBottom:12,display:"flex",alignItems:"center",gap:8,borderBottom:"2px solid "+(col||C.accent),paddingBottom:8};}
-function badge(c){return{display:"inline-block",padding:"2px 8px",borderRadius:4,fontSize:10,fontWeight:700,color:C.white,background:c};}
-function tabSt(a){return{padding:"10px 18px",cursor:"pointer",fontSize:12,fontWeight:600,color:a?C.white:"rgba(255,255,255,.55)",background:a?C.accent:"transparent"};}
-
-/* ── Aligned table components ── */
-function SopTbl(props){
-  var m=props.m, mode=props.mode; // mode = "value" | "moic"
-  return(
-    <table style={S.tbl}>
-      <colgroup><col style={{width:"18%"}}/>{m.crS.map(function(_,j){return <col key={j} style={{width:(82/m.crS.length)+"%"}}/>;})}</colgroup>
-      <thead><tr><th style={S.thL}>Tasa Desc.</th>{m.crS.map(function(cr,j){return<th key={j} style={S.th}>CR {fmt(cr,"pct")}</th>;})}</tr></thead>
-      <tbody>{m.dR.map(function(dr,i){return(
-        <tr key={i} style={i===2?S.hi:{}}>
-          <td style={S.tdL}>{fmt(dr,"pct")}</td>
-          {m.sOp[i].map(function(c,j){var e=sEdge(m.dR,m.crS,i,j);return(
-            <td key={j} style={eStyle(S.td,e)}>{mode==="moic"?<Moic v={c.moic}/>:fmt(c.value,"currencyM")}</td>
-          );})}
-        </tr>
-      );})}</tbody>
-    </table>
-  );
-}
-
-function CopTbl(props){
-  var m=props.m,disc=props.disc,years=props.years,yIdxs=props.yIdxs,mode=props.mode;
-  var maxYi=yIdxs.length-1;
-  return(
-    <table style={S.tbl}>
-      <colgroup><col style={{width:"12%"}}/>{yIdxs.map(function(_,j){return <col key={j} style={{width:(88/yIdxs.length)+"%"}}/>;})}</colgroup>
-      <thead><tr><th style={S.thL}>CapRate</th>{years.map(function(y){return<th key={y} style={S.th}>Año {y}</th>;})}</tr></thead>
-      <tbody>{m.crC.map(function(cr,ci){return(
-        <tr key={ci} style={ci===0?S.hi:{}}>
-          <td style={S.tdL}>{fmt(cr,"pct")}</td>
-          {yIdxs.map(function(yi,yii){var e=cEdge(m.dR,m.crC,2,ci,yii,maxYi);var cell=m.cOp[2]&&m.cOp[2][ci]&&m.cOp[2][ci][yi]?m.cOp[2][ci][yi]:null;return(
-            <td key={yi} style={eStyle(S.td,e)}>{mode==="moic"?<Moic v={cell?cell.moic:0}/>:fmt(cell?cell.totalValue:0,"currencyM")}</td>
-          );})}
-        </tr>
-      );})}</tbody>
-    </table>
-  );
-}
-
+function computeMA(p){var mi=INF/12,aa=ASSETS.filter(function(_,i){return p.sw[i]}),tTer=0,tCon=0,tM2=0;aa.forEach(function(a){tTer+=a.ter;tCon+=a.con;tM2+=a.m2});var tInv=tTer+tCon,rev=new Array(11).fill(0);aa.forEach(function(a){for(var yi=0;yi<11;yi++){var ms=yi===0?[0]:Array.from({length:12},function(_,k){return(yi-1)*12+1+k});ms.forEach(function(m){if(m>=a.sm)rev[yi]+=a.m2*p.occ*a.bp*(1+p.ps)*Math.pow(1+mi,m)})}});var noi=rev.map(function(r){return r*(1-p.opex)});var dR=[p.disc-0.02,p.disc-0.01,p.disc,p.disc+0.01,p.disc+0.02],crS=[p.cap,p.cap+0.01,p.cap+0.02],crC=[p.cap,p.cap+0.005,p.cap+0.01,p.cap+0.015,p.cap+0.02];var sOp=dR.map(function(dr){var vp=0;for(var t=1;t<=10;t++)vp+=noi[t]/Math.pow(1+dr,t);return crS.map(function(cr){var tv=(noi[10]*(1+INF)/cr)/Math.pow(1+dr,10);var val=(vp+tv)*Math.pow(1+dr,0.5);return{value:val,moic:tInv>0?val/tInv:0}})});var cOp=dR.map(function(dr){return crC.map(function(cr){return Array.from({length:10},function(_,ti){var t=ti+1,vpN=0;for(var k=1;k<=t;k++)vpN+=noi[k]/Math.pow(1+dr,k);vpN*=Math.pow(1+dr,0.5);var vpE=(noi[t]/cr/Math.pow(1+dr,t))*Math.pow(1+dr,0.5);var tv=vpN+vpE;return{totalValue:tv,moic:tInv>0?tv/tInv:0}})})});var ai=aa.map(function(a){return{name:a.id,m2:a.m2,price:a.bp*(1+p.ps)}});var wP=tM2>0?aa.reduce(function(s,a){return s+a.m2*a.bp*(1+p.ps)},0)/tM2:0;return{tInv:tInv,tTer:tTer,tCon:tCon,tM2:tM2,wP:wP,noi:noi,sOp:sOp,cOp:cOp,dR:dR,crS:crS,crC:crC,ai:ai};}
+function calcIRR(cfs){var r=0.1,tol=1e-7;for(var iter=0;iter<200;iter++){var npv=0,dnpv=0;for(var i=0;i<cfs.length;i++){npv+=cfs[i]/Math.pow(1+r,i);dnpv+=-i*cfs[i]/Math.pow(1+r,i+1)}if(Math.abs(dnpv)<1e-12)break;var nr=r-npv/dnpv;if(Math.abs(nr-r)<tol)return nr;r=nr;if(r<-0.99)r=-0.99;if(r>10)r=10}return r}
+function invRange(swArr){var mi=INF/12,aa=ASSETS.filter(function(_,i){return swArr[i]});var rev=new Array(11).fill(0);aa.forEach(function(a){for(var yi=0;yi<11;yi++){var ms=yi===0?[0]:Array.from({length:12},function(_,k){return(yi-1)*12+1+k});ms.forEach(function(m){if(m>=a.sm)rev[yi]+=a.m2*1.0*a.bp*1.0*Math.pow(1+mi,m)})}});var noi=rev.map(function(r){return r*0.94});var vals=[];[0.12,0.13,0.14].forEach(function(dr){[0.085,0.09,0.095].forEach(function(cr){var vp=0;for(var t=1;t<=10;t++)vp+=noi[t]/Math.pow(1+dr,t);var tv=(noi[10]*(1+INF)/cr)/Math.pow(1+dr,10);vals.push((vp+tv)*Math.pow(1+dr,0.5))})});if(vals.length===0)return{min:0,max:0};return{min:Math.min.apply(null,vals),max:Math.max.apply(null,vals)}}
+function computeBuyer(p){var mi=INF/12,aa=ASSETS.filter(function(_,i){return p.sw[i]});var rev=new Array(11).fill(0);aa.forEach(function(a){for(var yi=0;yi<11;yi++){var ms=yi===0?[0]:Array.from({length:12},function(_,k){return(yi-1)*12+1+k});ms.forEach(function(m){if(m>=a.sm)rev[yi]+=a.m2*p.occ*a.bp*(1+p.ps)*Math.pow(1+mi,m)})}});var noi=rev.map(function(r){return r*(1-p.opex)});var inv=p.inv||0;if(inv<=0)return null;var loanMo=p.loanYears*12;var debt=p.debtOn?inv*p.ltv:0;var equity=inv-debt;var annInt=new Array(11).fill(0);if(debt>0&&loanMo>0&&p.debtRate>0){var mr=p.debtRate/12,n=loanMo;var pmt=debt*mr*Math.pow(1+mr,n)/(Math.pow(1+mr,n)-1);var bal=debt;for(var m=1;m<=n;m++){var interest=bal*mr;var principal=pmt-interest;bal=Math.max(0,bal-principal);var yearIdx=Math.floor((m-1)/12)+2;if(yearIdx<=10)annInt[yearIdx]+=interest}}var appreciation=p.capRate>0?noi[10]/p.capRate:0;var cf=new Array(11).fill(0);cf[0]=0;cf[1]=-inv+debt;for(var y=2;y<=10;y++)cf[y]=noi[y]-annInt[y];cf[10]+=appreciation;var irr=0;try{irr=calcIRR(cf)}catch(e){}var moic=equity>0?appreciation/equity:0;var cumCF=0,payback=0;for(var y2=0;y2<=10;y2++){cumCF+=cf[y2];if(cumCF>0&&payback===0&&y2>0){var prevCum=cumCF-cf[y2];payback=y2+(-prevCum)/cf[y2];break}}if(payback===0&&cumCF<=0)payback=-1;var coc=equity>0?cf[2]/equity:0;var tM2=aa.reduce(function(s,a){return s+a.m2},0);var ai=aa.map(function(a){return{name:a.id,m2:a.m2,price:a.bp*(1+p.ps)}});var wP=tM2>0?aa.reduce(function(s,a){return s+a.m2*a.bp*(1+p.ps)},0)/tM2:0;return{noi:noi,cf:cf,irr:irr,moic:moic,payback:payback,coc:coc,equity:equity,debt:debt,appreciation:appreciation,tM2:tM2,ai:ai,wP:wP};}
+function sEdge(dR,crS,i,j){if(!inHL(dR[i],crS[j]))return null;return{top:i===0||!inHL(dR[i-1],crS[j]),bot:i===dR.length-1||!inHL(dR[i+1],crS[j]),left:j===0||!inHL(dR[i],crS[j-1]),right:j===crS.length-1||!inHL(dR[i],crS[j+1])}}
+function cEdge(dR,crC,di,ci,yi,maxYi){if(!inHL(dR[di],crC[ci]))return null;return{top:ci===0||!inHL(dR[di],crC[ci-1]),bot:ci===crC.length-1||!inHL(dR[di],crC[ci+1]),left:yi===0,right:yi===maxYi}}
+function eStyle(base,e){if(!e)return base;var b={};if(e.top)b.borderTop="2.5px solid "+C.hlGreen;if(e.bot)b.borderBottom="2.5px solid "+C.hlGreen;if(e.left)b.borderLeft="2.5px solid "+C.hlGreen;if(e.right)b.borderRight="2.5px solid "+C.hlGreen;return Object.assign({},base,{background:C.hlBg},b)}
+var S={wrap:{fontFamily:"'DM Sans','Segoe UI',sans-serif",background:C.bg,minHeight:"100vh",color:C.black,fontSize:13},hdr:{background:"linear-gradient(135deg,"+C.dark+","+C.mid+")",padding:"20px 28px",color:C.white,display:"flex",justifyContent:"space-between",alignItems:"center"},card:{background:C.white,borderRadius:8,padding:"18px 20px",boxShadow:"0 1px 4px rgba(0,0,0,.06)"},lbl:{fontSize:11,fontWeight:600,color:C.mid,marginBottom:4,display:"block",textTransform:"uppercase",letterSpacing:.3},inp:{width:"100%",padding:"7px 10px",border:"1.5px solid "+C.light,borderRadius:5,fontSize:13,color:C.dark,fontWeight:600,background:C.white,boxSizing:"border-box",outline:"none"},swR:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"5px 0",borderBottom:"1px solid "+C.bg},tabs:{display:"flex",gap:0,background:C.dark,borderRadius:"8px 8px 0 0",overflow:"hidden"},tbl:{width:"100%",borderCollapse:"collapse",fontSize:11,tableLayout:"fixed"},th:{padding:"6px 8px",textAlign:"right",fontWeight:700,color:C.white,background:C.dark,fontSize:10,whiteSpace:"nowrap"},thL:{padding:"6px 8px",textAlign:"left",fontWeight:700,color:C.white,background:C.dark,fontSize:10},td:{padding:"5px 8px",textAlign:"right",borderBottom:"1px solid "+C.bg,whiteSpace:"nowrap"},tdL:{padding:"5px 8px",textAlign:"left",borderBottom:"1px solid "+C.bg,fontWeight:600,color:C.dark,whiteSpace:"nowrap"},hi:{background:"rgba(229,147,74,.12)",fontWeight:700}};
+function Toggle(p){return(<div onClick={p.onClick} style={{width:38,height:20,borderRadius:10,background:p.on?C.accent:C.light,cursor:"pointer",position:"relative",transition:"background .2s",flexShrink:0}}><div style={{width:16,height:16,borderRadius:"50%",background:C.white,position:"absolute",top:2,left:p.on?20:2,transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,.2)"}}/></div>)}
+function Inp(p){return(<div><label style={S.lbl}>{p.label}</label><div style={{position:"relative"}}><input type="number" style={Object.assign({},S.inp,{paddingRight:p.suffix?30:10})} value={p.value} onChange={function(e){p.onChange(parseFloat(e.target.value)||0)}} step={p.step||0.01} min={p.min} max={p.max}/>{p.suffix&&<span style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",fontSize:11,color:C.mid,fontWeight:600}}>{p.suffix}</span>}</div></div>)}
+function Moic(p){var c=p.v>=1.5?C.green:p.v>=1.2?C.accent:"#cc3333";return<span style={{color:c,fontWeight:700}}>{fmt(p.v,"moic")}</span>}
+function secT(col){return{fontSize:14,fontWeight:700,color:C.dark,marginBottom:12,display:"flex",alignItems:"center",gap:8,borderBottom:"2px solid "+(col||C.accent),paddingBottom:8}}
+function badge(c){return{display:"inline-block",padding:"2px 8px",borderRadius:4,fontSize:10,fontWeight:700,color:C.white,background:c}}
+function tabSt(a){return{padding:"10px 18px",cursor:"pointer",fontSize:12,fontWeight:600,color:a?C.white:"rgba(255,255,255,.55)",background:a?C.accent:"transparent"}}
+function ctaBtn(label,onClick,isPrimary){return<span onClick={onClick} style={{display:"inline-block",padding:"6px 16px",background:isPrimary?C.accent:"rgba(255,255,255,0.2)",border:isPrimary?"none":"1px solid rgba(255,255,255,0.4)",borderRadius:5,fontSize:11,fontWeight:600,color:C.white,cursor:"pointer",letterSpacing:0.3,marginRight:8}}>{label}</span>}
+function SopTbl(p){var m=p.m,mode=p.mode;return(<table style={S.tbl}><colgroup><col style={{width:"18%"}}/>{m.crS.map(function(_,j){return<col key={j} style={{width:(82/m.crS.length)+"%"}}/>})}</colgroup><thead><tr><th style={S.thL}>Tasa Desc.</th>{m.crS.map(function(cr,j){return<th key={j} style={S.th}>CR {fmt(cr,"pct")}</th>})}</tr></thead><tbody>{m.dR.map(function(dr,i){return(<tr key={i} style={i===2?S.hi:{}}><td style={S.tdL}>{fmt(dr,"pct")}</td>{m.sOp[i].map(function(c,j){var e=sEdge(m.dR,m.crS,i,j);return(<td key={j} style={eStyle(S.td,e)}>{mode==="moic"?<Moic v={c.moic}/>:fmt(c.value,"currencyM")}</td>)})}</tr>)})}</tbody></table>)}
+function CopTbl(p){var m=p.m,years=p.years,yIdxs=p.yIdxs,mode=p.mode,maxYi=yIdxs.length-1;return(<table style={S.tbl}><colgroup><col style={{width:"12%"}}/>{yIdxs.map(function(_,j){return<col key={j} style={{width:(88/yIdxs.length)+"%"}}/>})}</colgroup><thead><tr><th style={S.thL}>CapRate</th>{years.map(function(y){return<th key={y} style={S.th}>Año {y}</th>})}</tr></thead><tbody>{m.crC.map(function(cr,ci){return(<tr key={ci} style={ci===0?S.hi:{}}><td style={S.tdL}>{fmt(cr,"pct")}</td>{yIdxs.map(function(yi,yii){var e=cEdge(m.dR,m.crC,2,ci,yii,maxYi);var cell=m.cOp[2]&&m.cOp[2][ci]&&m.cOp[2][ci][yi]?m.cOp[2][ci][yi]:null;return(<td key={yi} style={eStyle(S.td,e)}>{mode==="moic"?<Moic v={cell?cell.moic:0}/>:fmt(cell?cell.totalValue:0,"currencyM")}</td>)})}</tr>)})}</tbody></table>)}
+function PortInfo(p){var ai=p.ai,tM2=p.tM2,wP=p.wP,noi=p.noi;var noiS=noi.slice(1),maxN=Math.max.apply(null,noiS),posN=noiS.filter(function(v){return v>0}),minN=posN.length>0?Math.min.apply(null,posN):0,cMin=minN*0.92;return(<div><div style={Object.assign({},{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14},p.extraStyle||{},{marginBottom:14})}><div><label style={S.lbl}>m² Disponibles</label><div style={{background:C.bg,borderRadius:6,padding:"8px 10px"}}>{ai.map(function(a){return(<div key={a.name} style={{display:"flex",justifyContent:"space-between",padding:"3px 0",fontSize:12}}><span style={{color:C.mid,fontWeight:500}}>{a.name}</span><span style={{fontWeight:700,color:C.dark}}>{fmt(a.m2,"num")} m²</span></div>)})}<div style={{display:"flex",justifyContent:"space-between",padding:"5px 0 0",fontSize:12,borderTop:"1.5px solid "+C.light,marginTop:4}}><span style={{fontWeight:700,color:C.dark}}>Total</span><span style={{fontWeight:800,color:C.accent}}>{fmt(tM2,"num")} m²</span></div></div></div><div><label style={S.lbl}>Precio Renta ($/m²/mes)</label><div style={{background:C.bg,borderRadius:6,padding:"8px 10px"}}>{ai.map(function(a){return(<div key={a.name} style={{display:"flex",justifyContent:"space-between",padding:"3px 0",fontSize:12}}><span style={{color:C.mid,fontWeight:500}}>{a.name}</span><span style={{fontWeight:700,color:C.dark}}>{fmt(a.price,"price")}</span></div>)})}<div style={{display:"flex",justifyContent:"space-between",padding:"5px 0 0",fontSize:12,borderTop:"1.5px solid "+C.light,marginTop:4}}><span style={{fontWeight:700,color:C.dark}}>Prom.</span><span style={{fontWeight:800,color:C.accent}}>{fmt(wP,"price")}</span></div></div></div></div><div><label style={S.lbl}>NOI Anual Estimado (MXN)</label><div style={{display:"flex",alignItems:"flex-end",gap:3,height:100,marginTop:6,padding:"0 2px"}}>{noiS.map(function(v,i){var rng=maxN-cMin;var h=rng>0&&v>0?((v-cMin)/rng)*100:0;return(<div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center"}}><span style={{fontSize:8,fontWeight:700,color:C.dark,marginBottom:2,whiteSpace:"nowrap"}}>{v>0?(v/1e6).toFixed(1)+"M":"—"}</span><div style={{width:"100%",height:Math.max(h,4)+"%",background:"linear-gradient(180deg,"+C.accent+","+C.mid+")",borderRadius:"3px 3px 0 0",minHeight:v>0?8:0}}/><span style={{fontSize:8,color:C.mid,marginTop:2}}>{2026+i}</span></div>)})}</div></div></div>)}
 var hlNote="Nota: Las celdas resaltadas representan los rangos de Cap Rate (8.5%–9.5%) y Tasa de Descuento (12.0%–14.0%) que los inversionistas usarían con mayor probabilidad para valorar el activo.";
+function InfoModal(p){if(!p.show)return null;return(
+<div style={{position:"fixed",top:0,left:0,width:"100%",height:"100%",background:"rgba(0,0,0,0.5)",zIndex:1000,display:"flex",justifyContent:"center",alignItems:"flex-start",paddingTop:40,overflowY:"auto"}} onClick={p.onClose}>
+<div style={{background:C.white,borderRadius:12,maxWidth:760,width:"92%",padding:"28px 32px",marginBottom:40,boxShadow:"0 8px 32px rgba(0,0,0,0.2)",position:"relative"}} onClick={function(e){e.stopPropagation()}}>
+<div onClick={p.onClose} style={{position:"absolute",top:14,right:18,width:28,height:28,borderRadius:"50%",background:C.bg,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:16,color:C.dark,fontWeight:700}}>{"✕"}</div>
+<div style={{textAlign:"center",marginBottom:24}}>
+<img src={LOGO_DARK} alt="RMR Capital" style={{height:55,objectFit:"contain",marginBottom:10}}/>
+<div style={{fontSize:18,fontWeight:800,color:C.dark,letterSpacing:0.3}}>PROYECTO OMEGA</div>
+<div style={{fontSize:11,color:C.mid}}>Bodegas Guadalajara — Modelo de Valuación Interactivo</div>
+</div>
 
+<div style={{marginBottom:24}}>
+<div style={secT(C.accent)}><span style={badge(C.dark)}>01</span>Descripción del Ejercicio</div>
+<p style={{fontSize:12,color:C.black,lineHeight:1.7,marginBottom:10}}>Modelo interactivo para la valuación de un portafolio de bodegas industriales ubicadas en la zona metropolitana de Guadalajara. La herramienta incluye dos módulos independientes:</p>
+<p style={{fontSize:12,color:C.black,lineHeight:1.7,marginBottom:10}}><strong style={{color:C.dark}}>Análisis Media Aerea</strong> — Evalúa el valor presente del portafolio bajo dos escenarios: (1) venta inmediata sin operar los activos (“Valor s/ Operación”), donde el valor se determina por el VP de los flujos de NOI proyectados más un valor terminal descontado; y (2) operación y venta en diferentes horizontes de tiempo (“Valor c/ Operación”), donde se acumula el VP del NOI generado durante la operación más el VP del valor de salida al momento de una potencial venta. Ambos escenarios incorporan un ajuste de medio año (Mid-Year Convention).</p>
+<p style={{fontSize:12,color:C.black,lineHeight:1.7,marginBottom:10}}><strong style={{color:C.dark}}>Análisis Comprador</strong> — Permite simular el retorno de un inversionista que adquiere el portafolio ya construido a un precio determinado, con la opción de incluir financiamiento. Los resultados incluyen IRR, MOIC, Payback y Cash-on-Cash proyectados a 10 años.</p>
+<p style={{fontSize:12,color:C.black,lineHeight:1.7}}>Todos los supuestos son interactivos y los resultados se actualizan en tiempo real.</p>
+</div>
+
+<div style={{marginBottom:24}}>
+<div style={secT(C.accent)}><span style={badge(C.dark)}>02</span>Instrucciones de Uso</div>
+<p style={{fontSize:12,color:C.black,lineHeight:1.7,marginBottom:10}}>Cada módulo cuenta con un panel de <strong>Supuestos</strong> que permite modificar los parámetros del modelo:</p>
+<div style={{fontSize:11,fontWeight:700,color:C.dark,marginBottom:6}}>Supuestos compartidos:</div>
+<div style={{background:C.bg,borderRadius:8,padding:"12px 16px",marginBottom:12}}>
+<div style={{marginBottom:8}}><strong style={{color:C.dark}}>Selección de Activos:</strong> <span style={{color:C.black,fontSize:12}}>Activa o desactiva cada bodega del portafolio para evaluar combinaciones específicas de activos.</span></div>
+<div style={{marginBottom:8}}><strong style={{color:C.dark}}>Δ Precio Renta (%):</strong> <span style={{color:C.black,fontSize:12}}>Ajusta la variación sobre el precio base de renta por m² (rango: −10% a +15%).</span></div>
+<div style={{marginBottom:8}}><strong style={{color:C.dark}}>Ocupación (%):</strong> <span style={{color:C.black,fontSize:12}}>Define el porcentaje de ocupación asumido para el portafolio (rango: 0% a 100%).</span></div>
+<div><strong style={{color:C.dark}}>OpEx + G&A (% Ing):</strong> <span style={{color:C.black,fontSize:12}}>Establece los gastos operativos y de administración como porcentaje de los ingresos brutos.</span></div>
+</div>
+<div style={{fontSize:11,fontWeight:700,color:C.dark,marginBottom:6}}>Supuestos exclusivos del Análisis Media Aerea:</div>
+<div style={{background:C.bg,borderRadius:8,padding:"12px 16px",marginBottom:12}}>
+<div style={{marginBottom:8}}><strong style={{color:C.dark}}>Tasa de Descuento:</strong> <span style={{color:C.black,fontSize:12}}>Costo de capital utilizado para descontar los flujos futuros (rango: 9.0% a 15.0%).</span></div>
+<div><strong style={{color:C.dark}}>Cap Rate:</strong> <span style={{color:C.black,fontSize:12}}>Tasa de capitalización utilizada para calcular el valor terminal y los valores de salida (rango: 7.5% a 10.0%).</span></div>
+</div>
+<div style={{fontSize:11,fontWeight:700,color:C.dark,marginBottom:6}}>Supuestos exclusivos del Análisis Comprador:</div>
+<div style={{background:C.bg,borderRadius:8,padding:"12px 16px",marginBottom:12}}>
+<div style={{marginBottom:8}}><strong style={{color:C.dark}}>Inversión Inicial:</strong> <span style={{color:C.black,fontSize:12}}>Monto de compra del portafolio. Se muestra un rango indicativo basado en la valuación del Análisis Media Aerea.</span></div>
+<div style={{marginBottom:8}}><strong style={{color:C.dark}}>Cap Rate Año 10:</strong> <span style={{color:C.black,fontSize:12}}>Tasa de capitalización para estimar el valor de salida al final del horizonte.</span></div>
+<div><strong style={{color:C.dark}}>Supuestos de Financiamiento:</strong> <span style={{color:C.black,fontSize:12}}>Incluir o excluir deuda, Loan-to-Value, tasa anual y plazo.</span></div>
+</div>
+<p style={{fontSize:12,color:C.black,lineHeight:1.7}}>Los resultados se actualizan automáticamente al modificar cualquier supuesto. En el Análisis Media Aerea, las celdas resaltadas en verde indican los rangos de Tasa de Descuento (12.0%–14.0%) y Cap Rate (8.5%–9.5%) que representan los parámetros más probables de valuación por parte de inversionistas institucionales en el mercado mexicano.</p>
+</div>
+
+<div>
+<div style={secT(C.accent)}><span style={badge(C.accent)}>!</span>Aviso Legal</div>
+<div style={{background:C.bg,borderRadius:8,padding:"14px 18px",fontSize:11,color:C.dark,lineHeight:1.8,borderLeft:"3px solid "+C.accent}}>
+<p style={{marginBottom:10}}>Este documento ha sido preparado por RMR Capital exclusivamente con fines informativos e indicativos. La información, supuestos, proyecciones y resultados aquí presentados no constituyen una oferta, solicitud, recomendación ni asesoría de inversión de ningún tipo. Los valores y rendimientos proyectados se basan en estimaciones y supuestos que pueden no materializarse y no representan una garantía de desempeño futuro. Los resultados reales pueden diferir materialmente de las proyecciones presentadas.</p>
+<p style={{marginBottom:10}}>Este material es estrictamente confidencial y es propiedad exclusiva de RMR Capital. Queda prohibida su reproducción, distribución o divulgación total o parcial a terceros sin la autorización previa y por escrito de RMR Capital. Al acceder a este documento, el receptor acepta mantener la confidencialidad de su contenido y utilizarlo únicamente para los fines autorizados por RMR Capital.</p>
+<p>RMR Capital no asume responsabilidad alguna por decisiones de inversión tomadas con base en la información aquí contenida. Se recomienda a los potenciales inversionistas realizar su propio análisis independiente y consultar a sus asesores legales, fiscales y financieros antes de tomar cualquier decisión de inversión.</p>
+</div>
+</div>
+</div>
+</div>
+)}
+function fmtIRR(v){if(v==null||isNaN(v)||v<=-0.99||v>=9.99||Math.abs(v)>5)return "n.m.";if(v<0)return "n.m.";return fmt(v,"pct")}
 function App(){
+  var _pg=useState("media"),page=_pg[0],setPage=_pg[1];
+  var _si=useState(false),showInfo=_si[0],setShowInfo=_si[1];
   var _sw=useState([true,true,true,true,true]),sw=_sw[0],setSw=_sw[1];
   var _ps=useState(0),ps=_ps[0],setPs=_ps[1];
   var _oc=useState(1),occ=_oc[0],setOcc=_oc[1];
@@ -206,214 +105,114 @@ function App(){
   var _di=useState(0.12),disc=_di[0],setDisc=_di[1];
   var _ca=useState(0.075),cap=_ca[0],setCap=_ca[1];
   var _ta=useState("summary"),tab=_ta[0],setTab=_ta[1];
-  var _si=useState(false),showInfo=_si[0],setShowInfo=_si[1];
-
-  var toggleSw=useCallback(function(i){setSw(function(p){var n=p.slice();n[i]=!n[i];return n;});},[]);
-  var m=useMemo(function(){return compute({sw:sw,ps:ps,occ:occ,opex:opex,disc:disc,cap:cap});},[sw,ps,occ,opex,disc,cap]);
-
-  var g3={display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:14};
-  var g2={display:"grid",gridTemplateColumns:"1fr 1fr",gap:14};
-
-  var noiS=m.noi.slice(1),maxN=Math.max.apply(null,noiS);
-  var posN=noiS.filter(function(v){return v>0;});
-  var minN=posN.length>0?Math.min.apply(null,posN):0;
-  var cMin=minN*0.92;
-
+  var toggleSw=useCallback(function(i){setSw(function(p){var n=p.slice();n[i]=!n[i];return n})},[]);
+  var _bsw=useState([true,true,true,true,true]),bsw=_bsw[0],setBsw=_bsw[1];
+  var _binv=useState(""),binv=_binv[0],setBinv=_binv[1];
+  var _bps=useState(0),bps=_bps[0],setBps=_bps[1];
+  var _boc=useState(1),bocc=_boc[0],setBocc=_boc[1];
+  var _box=useState(0.06),bopex=_box[0],setBopex=_box[1];
+  var _bcap=useState(0.075),bcap=_bcap[0],setBcap=_bcap[1];
+  var _bdo=useState(true),bdebtOn=_bdo[0],setBdebtOn=_bdo[1];
+  var _bltv=useState(0.6),bltv=_bltv[0],setBltv=_bltv[1];
+  var _bdr=useState(0.08),bdebtRate=_bdr[0],setBdebtRate=_bdr[1];
+  var _bly=useState(9),bloanYr=_bly[0],setBloanYr=_bly[1];
+  var toggleBsw=useCallback(function(i){setBsw(function(p){var n=p.slice();n[i]=!n[i];return n})},[]);
+  var m=useMemo(function(){return computeMA({sw:sw,ps:ps,occ:occ,opex:opex,disc:disc,cap:cap})},[sw,ps,occ,opex,disc,cap]);
+  var bm=useMemo(function(){return computeBuyer({sw:bsw,ps:bps,occ:bocc,opex:bopex,capRate:bcap,inv:parseFloat(binv)||0,debtOn:bdebtOn,ltv:bltv,debtRate:bdebtRate,loanYears:bloanYr})},[bsw,bps,bocc,bopex,bcap,binv,bdebtOn,bltv,bdebtRate,bloanYr]);
+  var bRange=useMemo(function(){return invRange(bsw)},[bsw]);
+  var bmNoi=useMemo(function(){var mi=INF/12,aa=ASSETS.filter(function(_,i){return bsw[i]});var rev=new Array(11).fill(0);aa.forEach(function(a){for(var yi=0;yi<11;yi++){var ms=yi===0?[0]:Array.from({length:12},function(_,k){return(yi-1)*12+1+k});ms.forEach(function(m){if(m>=a.sm)rev[yi]+=a.m2*bocc*a.bp*(1+bps)*Math.pow(1+mi,m)})}});return rev.map(function(r){return r*(1-bopex)})},[bsw,bps,bocc,bopex]);
+  var g3={display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:14},g2={display:"grid",gridTemplateColumns:"1fr 1fr",gap:14};
   return(
   <div style={S.wrap}>
-    {/* HEADER */}
-    <div style={S.hdr}>
-      <div>
+    <InfoModal show={showInfo} onClose={function(){setShowInfo(false)}}/>
+    {page==="media"&&(<div>
+      <div style={S.hdr}><div>
+        <div style={{fontSize:10,fontWeight:600,letterSpacing:1,opacity:0.6,marginBottom:4,textTransform:"uppercase"}}>Análisis Media Aerea</div>
         <h1 style={{fontSize:22,fontWeight:700,margin:0,letterSpacing:0.5}}>PROYECTO OMEGA — Bodegas Guadalajara</h1>
-        <div style={{fontSize:12,opacity:0.7,marginTop:4}}>Modelo de Valuación Interactivo &nbsp;|&nbsp; MXN &nbsp;|&nbsp; Horizonte 10 años</div>
-        <div style={{marginTop:8}}>
-          <span onClick={function(){setShowInfo(true);}} style={{display:"inline-block",padding:"5px 14px",background:"rgba(255,255,255,0.2)",border:"1px solid rgba(255,255,255,0.4)",borderRadius:5,fontSize:11,fontWeight:600,color:C.white,cursor:"pointer",letterSpacing:0.3,transition:"background .2s"}}>ℹ  Información del Ejercicio</span>
-        </div>
-      </div>
-      <img src={LOGO} alt="RMR Capital" style={{height:60,objectFit:"contain"}}/>
-    </div>
-
-    <div style={{padding:"16px 20px"}}>
-      {/* INPUTS + INFO */}
-      <div style={Object.assign({},g2,{marginBottom:14})}>
-        {/* Supuestos */}
-        <div style={S.card}>
-          <div style={secT(C.dark)}><span style={badge(C.dark)}>BP</span>Supuestos</div>
-          <div style={{marginBottom:14}}>
-            <label style={Object.assign({},S.lbl,{marginBottom:8})}>Selección de Activos</label>
-            {ASSETS.map(function(a,i){return(
-              <div key={a.id} style={S.swR}><span style={{fontSize:12,color:C.dark,fontWeight:500}}>{a.name}</span><Toggle on={sw[i]} onClick={function(){toggleSw(i);}}/></div>
-            );})}
+        <div style={{fontSize:12,opacity:0.7,marginTop:4}}>Modelo de Valuación Interactivo | MXN | Horizonte 10 años</div>
+        <div style={{marginTop:8}}>{ctaBtn("ℹ  Información",function(){setShowInfo(true)},false)}{ctaBtn("Ir a Análisis Comprador →",function(){setPage("buyer")},true)}</div>
+      </div><img src={LOGO} alt="RMR" style={{height:60,objectFit:"contain"}}/></div>
+      <div style={{padding:"16px 20px"}}>
+        <div style={Object.assign({},g2,{marginBottom:14})}>
+          <div style={S.card}><div style={secT(C.dark)}><span style={badge(C.dark)}>BP</span>Supuestos</div>
+            <div style={{marginBottom:14}}><label style={Object.assign({},S.lbl,{marginBottom:8})}>Selección de Activos</label>{ASSETS.map(function(a,i){return(<div key={a.id} style={S.swR}><span style={{fontSize:12,color:C.dark,fontWeight:500}}>{a.name}</span><Toggle on={sw[i]} onClick={function(){toggleSw(i)}}/></div>)})}</div>
+            <div style={Object.assign({},g3,{marginBottom:14})}><Inp label="Δ Precio Renta (%)" value={(ps*100).toFixed(1)} onChange={function(v){setPs(Math.max(-0.10,Math.min(0.15,v/100)))}} suffix="%" step={1} min={-10} max={15}/><Inp label="Ocupación (%)" value={(occ*100).toFixed(1)} onChange={function(v){setOcc(Math.max(0,Math.min(1,v/100)))}} suffix="%" step={5} min={0} max={100}/><Inp label="OpEx + G&A (% Ing)" value={(opex*100).toFixed(1)} onChange={function(v){setOpex(Math.max(0,v/100))}} suffix="%" step={1} min={0}/></div>
+            <div style={g2}><Inp label="Tasa de Descuento" value={(disc*100).toFixed(1)} onChange={function(v){setDisc(Math.max(0.09,Math.min(0.15,v/100)))}} suffix="%" step={0.5} min={9} max={15}/><Inp label="Cap Rate" value={(cap*100).toFixed(1)} onChange={function(v){setCap(Math.max(0.075,Math.min(0.10,v/100)))}} suffix="%" step={0.5} min={7.5} max={10}/></div>
           </div>
-          <div style={Object.assign({},g3,{marginBottom:14})}>
-            <Inp label="Δ Precio Renta (%)" value={(ps*100).toFixed(1)} onChange={function(v){setPs(Math.max(-0.10,Math.min(0.15,v/100)));}} suffix="%" step={1} min={-10} max={15}/>
-            <Inp label="Ocupación (%)" value={(occ*100).toFixed(1)} onChange={function(v){setOcc(Math.max(0,Math.min(1,v/100)));}} suffix="%" step={5} min={0} max={100}/>
-            <Inp label="OpEx + G&A (% Ing)" value={(opex*100).toFixed(1)} onChange={function(v){setOpex(Math.max(0,v/100));}} suffix="%" step={1} min={0}/>
-          </div>
-          <div style={g2}>
-            <Inp label="Tasa de Descuento" value={(disc*100).toFixed(1)} onChange={function(v){setDisc(Math.max(0.09,Math.min(0.15,v/100)));}} suffix="%" step={0.5} min={9} max={15}/>
-            <Inp label="Cap Rate" value={(cap*100).toFixed(1)} onChange={function(v){setCap(Math.max(0.075,Math.min(0.10,v/100)));}} suffix="%" step={0.5} min={7.5} max={10}/>
+          <div style={S.card}><div style={secT(C.accent)}><span style={badge(C.accent)}>INFO</span>Información del Portafolio</div>
+            <div style={Object.assign({},g3,{marginBottom:14})}><div style={{background:C.bg,borderRadius:8,padding:"10px 14px",textAlign:"center"}}><div style={{fontSize:10,color:C.mid,textTransform:"uppercase"}}>Inversión Total</div><div style={{fontSize:20,fontWeight:800,color:C.dark}}>{fmt(m.tInv,"currencyM")}</div></div><div style={{background:C.bg,borderRadius:8,padding:"10px 14px",textAlign:"center"}}><div style={{fontSize:10,color:C.mid,textTransform:"uppercase"}}>Terreno</div><div style={{fontSize:20,fontWeight:800,color:C.mid}}>{fmt(m.tTer,"currencyM")}</div></div><div style={{background:C.bg,borderRadius:8,padding:"10px 14px",textAlign:"center"}}><div style={{fontSize:10,color:C.mid,textTransform:"uppercase"}}>Construcción</div><div style={{fontSize:20,fontWeight:800,color:C.mid}}>{fmt(m.tCon,"currencyM")}</div></div></div>
+            <PortInfo ai={m.ai} tM2={m.tM2} wP={m.wP} noi={m.noi}/>
           </div>
         </div>
+        <div style={S.tabs}>{[["summary","Resumen Side-by-Side"],["sop","Valor s/ Operación"],["cop","Valor c/ Operación"]].map(function(x){return<div key={x[0]} style={tabSt(tab===x[0])} onClick={function(){setTab(x[0])}}>{x[1]}</div>})}</div>
+        <div style={Object.assign({},S.card,{borderRadius:"0 0 8px 8px",marginTop:0})}>
+          {tab==="summary"&&(<div><div style={{textAlign:"center",marginBottom:16}}><span style={{fontSize:13,fontWeight:700,color:C.dark}}>Comparativo: Sin Operación vs. Con Operación</span><div style={{fontSize:10,color:C.mid,marginTop:2}}>Tasa: {fmt(disc,"pct")} | Cap Rate: {fmt(cap,"pct")} | Inversión: {fmt(m.tInv,"currencyM")}</div></div><div style={g2}><div style={{border:"2px solid "+C.dark,borderRadius:8,overflow:"hidden"}}><div style={{background:C.dark,color:C.white,padding:"8px 14px",fontWeight:700,fontSize:13}}>Valor s/ Operación</div><div style={{padding:14}}><div style={{fontSize:11,fontWeight:700,color:C.dark,marginBottom:4}}>Valor de Venta (MXN)</div><div style={{overflowX:"auto",marginBottom:12}}><SopTbl m={m} mode="value"/></div><div style={{fontSize:11,fontWeight:700,color:C.dark,marginBottom:4}}>MOIC</div><div style={{overflowX:"auto"}}><SopTbl m={m} mode="moic"/></div></div></div><div style={{border:"2px solid "+C.accent,borderRadius:8,overflow:"hidden"}}><div style={{background:C.accent,color:C.white,padding:"8px 14px",fontWeight:700,fontSize:13}}>Valor c/ Operación</div><div style={{padding:14}}><div style={{fontSize:11,fontWeight:700,color:C.dark,marginBottom:4}}>Valor de Venta (MXN) — Tasa: {fmt(disc,"pct")}</div><div style={{overflowX:"auto",marginBottom:12}}><CopTbl m={m} disc={disc} years={[1,3,5,7,10]} yIdxs={[0,2,4,6,9]} mode="value"/></div><div style={{fontSize:11,fontWeight:700,color:C.dark,marginBottom:4}}>MOIC — Tasa: {fmt(disc,"pct")}</div><div style={{overflowX:"auto"}}><CopTbl m={m} disc={disc} years={[1,3,5,7,10]} yIdxs={[0,2,4,6,9]} mode="moic"/></div></div></div></div><div style={{fontSize:10,color:C.mid,fontStyle:"italic",marginTop:10,padding:"8px 12px",background:C.bg,borderRadius:6,borderLeft:"3px solid "+C.hlGreen}}>{hlNote}</div></div>)}
+          {tab==="sop"&&(<div><div style={{fontSize:13,fontWeight:700,color:C.dark,marginBottom:4}}>Valor s/ Operación — Venta inmediata</div><div style={{fontSize:10,color:C.mid,marginBottom:14}}>Valor = VP(NOI) + VP(Terminal) con Mid-Year Adjustment</div><div style={{fontSize:12,fontWeight:700,color:C.dark,marginBottom:6}}>Valor de Venta</div><div style={{overflowX:"auto"}}><SopTbl m={m} mode="value"/></div><div style={{fontSize:12,fontWeight:700,color:C.dark,marginBottom:6,marginTop:16}}>MOIC</div><div style={{overflowX:"auto"}}><SopTbl m={m} mode="moic"/></div><div style={{fontSize:10,color:C.mid,fontStyle:"italic",marginTop:14,padding:"8px 12px",background:C.bg,borderRadius:6,borderLeft:"3px solid "+C.hlGreen}}>{hlNote}</div></div>)}
+          {tab==="cop"&&(<div><div style={{fontSize:13,fontWeight:700,color:C.dark,marginBottom:4}}>Valor c/ Operación — Operar y vender</div><div style={{fontSize:10,color:C.mid,marginBottom:14}}>Valor = VP(NOI acumulado) + VP(Valor de Salida) con Mid-Year Adjustment</div><div style={{fontSize:12,fontWeight:700,color:C.dark,marginBottom:6}}>Valor de Venta por Año (Tasa: {fmt(disc,"pct")})</div><div style={{overflowX:"auto"}}><CopTbl m={m} disc={disc} years={[1,2,3,4,5,6,7,8,9,10]} yIdxs={[0,1,2,3,4,5,6,7,8,9]} mode="value"/></div><div style={{fontSize:12,fontWeight:700,color:C.dark,marginBottom:6,marginTop:16}}>MOIC por Año (Tasa: {fmt(disc,"pct")})</div><div style={{overflowX:"auto"}}><CopTbl m={m} disc={disc} years={[1,2,3,4,5,6,7,8,9,10]} yIdxs={[0,1,2,3,4,5,6,7,8,9]} mode="moic"/></div><div style={{fontSize:10,color:C.mid,fontStyle:"italic",marginTop:14,padding:"8px 12px",background:C.bg,borderRadius:6,borderLeft:"3px solid "+C.hlGreen}}>{hlNote}</div></div>)}
+        </div>
+        <div style={{textAlign:"center",padding:"8px 0",fontSize:10,color:C.mid}}>Proyecto Omega — Análisis Media Aerea | Marzo 2026</div>
+      </div>
+    </div>)}
 
-        {/* Info Portafolio */}
-        <div style={S.card}>
-          <div style={secT(C.accent)}><span style={badge(C.accent)}>INFO</span>Información del Portafolio</div>
-          <div style={Object.assign({},g3,{marginBottom:14})}>
-            <div style={{background:C.bg,borderRadius:8,padding:"10px 14px",textAlign:"center"}}><div style={{fontSize:10,color:C.mid,textTransform:"uppercase"}}>Inversión Total</div><div style={{fontSize:20,fontWeight:800,color:C.dark}}>{fmt(m.tInv,"currencyM")}</div></div>
-            <div style={{background:C.bg,borderRadius:8,padding:"10px 14px",textAlign:"center"}}><div style={{fontSize:10,color:C.mid,textTransform:"uppercase"}}>Terreno</div><div style={{fontSize:20,fontWeight:800,color:C.mid}}>{fmt(m.tTer,"currencyM")}</div></div>
-            <div style={{background:C.bg,borderRadius:8,padding:"10px 14px",textAlign:"center"}}><div style={{fontSize:10,color:C.mid,textTransform:"uppercase"}}>Construcción</div><div style={{fontSize:20,fontWeight:800,color:C.mid}}>{fmt(m.tCon,"currencyM")}</div></div>
+    {page==="buyer"&&(<div>
+      <div style={Object.assign({},S.hdr,{background:"linear-gradient(135deg,#2E4057,"+C.dark+")"})}>
+        <div>
+          <div style={{fontSize:10,fontWeight:600,letterSpacing:1,opacity:0.6,marginBottom:4,textTransform:"uppercase"}}>Análisis Comprador</div>
+          <h1 style={{fontSize:22,fontWeight:700,margin:0,letterSpacing:0.5}}>PROYECTO OMEGA — ROI del Comprador</h1>
+          <div style={{fontSize:12,opacity:0.7,marginTop:4}}>Análisis de retorno para el inversionista que adquiere el portafolio construido</div>
+          <div style={{marginTop:8}}>{ctaBtn("← Volver a Análisis Media Aerea",function(){setPage("media")},false)}</div>
+        </div>
+        <img src={LOGO} alt="RMR" style={{height:60,objectFit:"contain"}}/>
+      </div>
+      <div style={{padding:"16px 20px"}}>
+        <div style={Object.assign({},g2,{marginBottom:14})}>
+          {/* SUPUESTOS */}
+          <div style={S.card}><div style={secT(C.dark)}><span style={badge(C.dark)}>BP</span>Supuestos</div>
+            <div style={{marginBottom:14}}>
+              <label style={S.lbl}>Inversión Inicial (MXN)</label>
+              <input type="text" style={Object.assign({},S.inp,{fontSize:15,fontWeight:800})} value={binv?Number(binv).toLocaleString("en-US"):""} onChange={function(e){setBinv(e.target.value.replace(/,/g,""))}} placeholder="Ingresa el monto de compra..."/>
+              {bRange.max>0&&<div style={{fontSize:10,color:C.hlGreen,marginTop:4,padding:"4px 8px",background:C.hlBg,borderRadius:4,borderLeft:"2px solid "+C.hlGreen}}>Rango indicativo (inputs base): {fmt(bRange.min,"currencyM")} – {fmt(bRange.max,"currencyM")}</div>}
+            </div>
+            <div style={{marginBottom:14}}><label style={Object.assign({},S.lbl,{marginBottom:8})}>Selección de Activos</label>{ASSETS.map(function(a,i){return(<div key={a.id} style={S.swR}><span style={{fontSize:12,color:C.dark,fontWeight:500}}>{a.name}</span><Toggle on={bsw[i]} onClick={function(){toggleBsw(i)}}/></div>)})}</div>
+            <div style={Object.assign({},g3,{marginBottom:14})}><Inp label="Δ Precio Renta (%)" value={(bps*100).toFixed(1)} onChange={function(v){setBps(Math.max(-0.10,Math.min(0.15,v/100)))}} suffix="%" step={1} min={-10} max={15}/><Inp label="Ocupación (%)" value={(bocc*100).toFixed(1)} onChange={function(v){setBocc(Math.max(0,Math.min(1,v/100)))}} suffix="%" step={5} min={0} max={100}/><Inp label="OpEx + G&A (% Ing)" value={(bopex*100).toFixed(1)} onChange={function(v){setBopex(Math.max(0,v/100))}} suffix="%" step={1} min={0}/></div>
+            <div style={{marginBottom:14}}><Inp label="Cap Rate Año 10" value={(bcap*100).toFixed(1)} onChange={function(v){setBcap(Math.max(0.05,Math.min(0.15,v/100)))}} suffix="%" step={0.5} min={5} max={15}/></div>
+            <div style={secT(C.accent)}><span style={badge(C.accent)}>$</span>Supuestos de Financiamiento</div>
+            <div style={Object.assign({},S.swR,{marginBottom:10,borderBottom:"none"})}><span style={{fontSize:12,color:C.dark,fontWeight:600}}>Incluir Deuda</span><Toggle on={bdebtOn} onClick={function(){setBdebtOn(!bdebtOn)}}/></div>
+            {bdebtOn&&(<div style={g3}><Inp label="Loan-to-Value" value={(bltv*100).toFixed(1)} onChange={function(v){setBltv(Math.max(0,Math.min(0.9,v/100)))}} suffix="%" step={5} min={0} max={90}/><Inp label="Tasa Anual" value={(bdebtRate*100).toFixed(1)} onChange={function(v){setBdebtRate(Math.max(0.01,Math.min(0.20,v/100)))}} suffix="%" step={0.5} min={1} max={20}/><Inp label="Plazo (años)" value={bloanYr} onChange={function(v){setBloanYr(Math.max(1,Math.min(30,Math.round(v))))}} step={1} min={1} max={30}/></div>)}
           </div>
-          <div style={Object.assign({},g2,{marginBottom:14})}>
-            <div><label style={S.lbl}>m² Disponibles Para Rentar</label>
-              <div style={{background:C.bg,borderRadius:6,padding:"8px 10px"}}>
-                {m.ai.map(function(a){return(<div key={a.name} style={{display:"flex",justifyContent:"space-between",padding:"3px 0",fontSize:12}}><span style={{color:C.mid,fontWeight:500}}>{a.name}</span><span style={{fontWeight:700,color:C.dark}}>{fmt(a.m2,"num")} m²</span></div>);})}
-                <div style={{display:"flex",justifyContent:"space-between",padding:"5px 0 0",fontSize:12,borderTop:"1.5px solid "+C.light,marginTop:4}}><span style={{fontWeight:700,color:C.dark}}>Total</span><span style={{fontWeight:800,color:C.accent}}>{fmt(m.tM2,"num")} m²</span></div>
-              </div>
-            </div>
-            <div><label style={S.lbl}>Precio Prom. Renta ($/m²/mes)</label>
-              <div style={{background:C.bg,borderRadius:6,padding:"8px 10px"}}>
-                {m.ai.map(function(a){return(<div key={a.name} style={{display:"flex",justifyContent:"space-between",padding:"3px 0",fontSize:12}}><span style={{color:C.mid,fontWeight:500}}>{a.name}</span><span style={{fontWeight:700,color:C.dark}}>{fmt(a.price,"price")}</span></div>);})}
-                <div style={{display:"flex",justifyContent:"space-between",padding:"5px 0 0",fontSize:12,borderTop:"1.5px solid "+C.light,marginTop:4}}><span style={{fontWeight:700,color:C.dark}}>Prom. Pond.</span><span style={{fontWeight:800,color:C.accent}}>{fmt(m.wP,"price")}</span></div>
-              </div>
-            </div>
-          </div>
-          <div><label style={S.lbl}>NOI Anual Estimado (MXN)</label>
-            <div style={{display:"flex",alignItems:"flex-end",gap:3,height:100,marginTop:6,padding:"0 2px"}}>
-              {noiS.map(function(v,i){var rng=maxN-cMin;var h=rng>0&&v>0?((v-cMin)/rng)*100:0;return(
-                <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:0}}>
-                  <span style={{fontSize:8,fontWeight:700,color:C.dark,marginBottom:2,whiteSpace:"nowrap"}}>{v>0?(v/1e6).toFixed(1)+"M":"—"}</span>
-                  <div style={{width:"100%",height:Math.max(h,4)+"%",background:"linear-gradient(180deg,"+C.accent+","+C.mid+")",borderRadius:"3px 3px 0 0",transition:"height .3s",minHeight:v>0?8:0}}/>
-                  <span style={{fontSize:8,color:C.mid,marginTop:2}}>{2026+i}</span>
-                </div>
-              );})}
-            </div>
+          {/* INFO PORTAFOLIO */}
+          <div style={S.card}><div style={secT(C.accent)}><span style={badge(C.accent)}>INFO</span>Información del Portafolio</div>
+            {bm?<PortInfo ai={bm.ai} tM2={bm.tM2} wP={bm.wP} noi={bmNoi}/>:<PortInfo ai={ASSETS.filter(function(_,i){return bsw[i]}).map(function(a){return{name:a.id,m2:a.m2,price:a.bp}})} tM2={ASSETS.filter(function(_,i){return bsw[i]}).reduce(function(s,a){return s+a.m2},0)} wP={function(){var aa=ASSETS.filter(function(_,i){return bsw[i]});var t=aa.reduce(function(s,a){return s+a.m2},0);return t>0?aa.reduce(function(s,a){return s+a.m2*a.bp},0)/t:0}()} noi={bmNoi}/>}
           </div>
         </div>
-      </div>
-
-      {/* TABS */}
-      <div style={S.tabs}>
-        {[["summary","Resumen Side-by-Side"],["sop","Valor s/ Operación"],["cop","Valor c/ Operación"]].map(function(x){return<div key={x[0]} style={tabSt(tab===x[0])} onClick={function(){setTab(x[0]);}}>{x[1]}</div>;})}
-      </div>
-      <div style={Object.assign({},S.card,{borderRadius:"0 0 8px 8px",marginTop:0})}>
-
-        {/* SUMMARY */}
-        {tab==="summary"&&(
-          <div>
-            <div style={{textAlign:"center",marginBottom:16}}>
-              <span style={{fontSize:13,fontWeight:700,color:C.dark}}>Comparativo: Sin Operación vs. Con Operación</span>
-              <div style={{fontSize:10,color:C.mid,marginTop:2}}>Tasa: {fmt(disc,"pct")} | Cap Rate: {fmt(cap,"pct")} | Inversión: {fmt(m.tInv,"currencyM")}</div>
+        {/* ROI RESULTS */}
+        <div style={Object.assign({},S.card,{marginBottom:14})}>
+          <div style={secT(C.dark)}><span style={badge(C.dark)}>ROI</span>Resumen Resultados ROI</div>
+          {!bm&&(<div style={{textAlign:"center",padding:"30px 20px"}}><div style={{fontSize:14,fontWeight:700,color:C.dark,marginBottom:4}}>Ingresa la Inversión Inicial</div><div style={{fontSize:12,color:C.mid}}>Escribe el monto de compra del portafolio para ver los resultados.</div></div>)}
+          {bm&&(<div>
+            <div style={Object.assign({},{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:14},{marginBottom:14})}>
+              <div style={{background:C.bg,borderRadius:8,padding:"16px",textAlign:"center"}}><div style={{fontSize:10,color:C.mid,textTransform:"uppercase",marginBottom:4}}>IRR</div><div style={{fontSize:28,fontWeight:800,color:bm.irr>=0.15?C.green:bm.irr>=0.08?C.accent:"#cc3333"}}>{bm.irr<0||bm.irr>5?"n.m.":fmt(bm.irr,"pct")}</div></div>
+              <div style={{background:C.bg,borderRadius:8,padding:"16px",textAlign:"center"}}><div style={{fontSize:10,color:C.mid,textTransform:"uppercase",marginBottom:4}}>MOIC (Año 10)</div><div style={{fontSize:28,fontWeight:800,color:bm.moic>=2?C.green:bm.moic>=1.5?C.accent:"#cc3333"}}>{fmt(bm.moic,"moic")}</div></div>
+              <div style={{background:C.bg,borderRadius:8,padding:"16px",textAlign:"center"}}><div style={{fontSize:10,color:C.mid,textTransform:"uppercase",marginBottom:4}}>Payback (Años)</div><div style={{fontSize:28,fontWeight:800,color:bm.payback>0&&bm.payback<=7?C.green:C.accent}}>{bm.payback>0?bm.payback.toFixed(1):"n.a."}</div></div>
+              <div style={{background:C.bg,borderRadius:8,padding:"16px",textAlign:"center"}}><div style={{fontSize:10,color:C.mid,textTransform:"uppercase",marginBottom:4}}>Cash-on-Cash</div><div style={{fontSize:28,fontWeight:800,color:bm.coc>=0.08?C.green:bm.coc>=0.05?C.accent:"#cc3333"}}>{fmt(bm.coc,"pct")}</div></div>
             </div>
-            <div style={g2}>
-              <div style={{border:"2px solid "+C.dark,borderRadius:8,overflow:"hidden"}}>
-                <div style={{background:C.dark,color:C.white,padding:"8px 14px",fontWeight:700,fontSize:13}}>Valor s/ Operación</div>
-                <div style={{padding:14}}>
-                  <div style={{fontSize:11,fontWeight:700,color:C.dark,marginBottom:4}}>Valor de Venta (MXN)</div>
-                  <div style={{overflowX:"auto",marginBottom:12}}><SopTbl m={m} mode="value"/></div>
-                  <div style={{fontSize:11,fontWeight:700,color:C.dark,marginBottom:4}}>MOIC</div>
-                  <div style={{overflowX:"auto"}}><SopTbl m={m} mode="moic"/></div>
-                </div>
-              </div>
-              <div style={{border:"2px solid "+C.accent,borderRadius:8,overflow:"hidden"}}>
-                <div style={{background:C.accent,color:C.white,padding:"8px 14px",fontWeight:700,fontSize:13}}>Valor c/ Operación</div>
-                <div style={{padding:14}}>
-                  <div style={{fontSize:11,fontWeight:700,color:C.dark,marginBottom:4}}>Valor de Venta (MXN) — Tasa: {fmt(disc,"pct")}</div>
-                  <div style={{overflowX:"auto",marginBottom:12}}><CopTbl m={m} disc={disc} years={[1,3,5,7,10]} yIdxs={[0,2,4,6,9]} mode="value"/></div>
-                  <div style={{fontSize:11,fontWeight:700,color:C.dark,marginBottom:4}}>MOIC — Tasa: {fmt(disc,"pct")}</div>
-                  <div style={{overflowX:"auto"}}><CopTbl m={m} disc={disc} years={[1,3,5,7,10]} yIdxs={[0,2,4,6,9]} mode="moic"/></div>
-                </div>
-              </div>
+            <div style={{background:C.bg,borderRadius:8,padding:"12px 16px",marginBottom:14}}>
+              <div style={{fontSize:11,fontWeight:700,color:C.dark,marginBottom:8}}>Desglose de la Inversión</div>
+              <div style={{display:"flex",justifyContent:"space-between",padding:"3px 0",fontSize:12}}><span style={{color:C.mid}}>Inversión Inicial</span><span style={{fontWeight:700,color:C.dark}}>{fmt(parseFloat(binv),"currencyM")}</span></div>
+              {bdebtOn&&<div style={{display:"flex",justifyContent:"space-between",padding:"3px 0",fontSize:12}}><span style={{color:C.mid}}>(-) Deuda ({fmt(bltv,"pct")} LTV)</span><span style={{fontWeight:700,color:C.green}}>{fmt(bm.debt,"currencyM")}</span></div>}
+              <div style={{display:"flex",justifyContent:"space-between",padding:"5px 0 0",fontSize:12,borderTop:"1.5px solid "+C.light,marginTop:4}}><span style={{fontWeight:700,color:C.dark}}>Equity Requerido</span><span style={{fontWeight:800,color:C.accent}}>{fmt(bm.equity,"currencyM")}</span></div>
             </div>
-            <div style={{fontSize:10,color:C.mid,fontStyle:"italic",marginTop:10,padding:"8px 12px",background:C.bg,borderRadius:6,borderLeft:"3px solid "+C.hlGreen}}>{hlNote}</div>
-          </div>
-        )}
-
-        {/* s/OPERACIÓN */}
-        {tab==="sop"&&(
-          <div>
-            <div style={{fontSize:13,fontWeight:700,color:C.dark,marginBottom:4}}>Valor s/ Operación — Venta inmediata sin operar</div>
-            <div style={{fontSize:10,color:C.mid,marginBottom:14}}>Valor = VP(NOI) + VP(Terminal) con Mid-Year Adjustment</div>
-            <div style={{fontSize:12,fontWeight:700,color:C.dark,marginBottom:6}}>Valor de Venta (Mid-Year Adj.)</div>
-            <div style={{overflowX:"auto"}}><SopTbl m={m} mode="value"/></div>
-            <div style={{fontSize:12,fontWeight:700,color:C.dark,marginBottom:6,marginTop:16}}>MOIC</div>
-            <div style={{overflowX:"auto"}}><SopTbl m={m} mode="moic"/></div>
-            <div style={{fontSize:10,color:C.mid,fontStyle:"italic",marginTop:14,padding:"8px 12px",background:C.bg,borderRadius:6,borderLeft:"3px solid "+C.hlGreen}}>{hlNote}</div>
-          </div>
-        )}
-
-        {/* c/OPERACIÓN */}
-        {tab==="cop"&&(
-          <div>
-            <div style={{fontSize:13,fontWeight:700,color:C.dark,marginBottom:4}}>Valor c/ Operación — Operar y vender en diferentes años</div>
-            <div style={{fontSize:10,color:C.mid,marginBottom:14}}>Valor = VP(NOI acumulado) + VP(Valor de Salida) con Mid-Year Adjustment</div>
-            <div style={{fontSize:12,fontWeight:700,color:C.dark,marginBottom:6}}>Valor de Venta por Año de Salida (Tasa: {fmt(disc,"pct")})</div>
-            <div style={{overflowX:"auto"}}><CopTbl m={m} disc={disc} years={[1,2,3,4,5,6,7,8,9,10]} yIdxs={[0,1,2,3,4,5,6,7,8,9]} mode="value"/></div>
-            <div style={{fontSize:12,fontWeight:700,color:C.dark,marginBottom:6,marginTop:16}}>MOIC por Año de Salida (Tasa: {fmt(disc,"pct")})</div>
-            <div style={{overflowX:"auto"}}><CopTbl m={m} disc={disc} years={[1,2,3,4,5,6,7,8,9,10]} yIdxs={[0,1,2,3,4,5,6,7,8,9]} mode="moic"/></div>
-            <div style={{fontSize:10,color:C.mid,fontStyle:"italic",marginTop:14,padding:"8px 12px",background:C.bg,borderRadius:6,borderLeft:"3px solid "+C.hlGreen}}>{hlNote}</div>
-          </div>
-        )}
-      </div>
-      <div style={{textAlign:"center",padding:"8px 0",fontSize:10,color:C.mid}}>Proyecto Omega — Modelo de Valuación Interactivo | Datos base: Marzo 2026</div>
-    </div>
-
-    {/* INFO MODAL OVERLAY */}
-    {showInfo&&(
-      <div style={{position:"fixed",top:0,left:0,width:"100%",height:"100%",background:"rgba(0,0,0,0.5)",zIndex:1000,display:"flex",justifyContent:"center",alignItems:"flex-start",paddingTop:40,overflowY:"auto"}} onClick={function(){setShowInfo(false);}}>
-        <div style={{background:C.white,borderRadius:12,maxWidth:720,width:"90%",padding:"28px 32px",marginBottom:40,boxShadow:"0 8px 32px rgba(0,0,0,0.2)",position:"relative"}} onClick={function(e){e.stopPropagation();}}>
-          {/* Close button */}
-          <div onClick={function(){setShowInfo(false);}} style={{position:"absolute",top:14,right:18,width:28,height:28,borderRadius:"50%",background:C.bg,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:16,color:C.dark,fontWeight:700}}>✕</div>
-
-          {/* Logo + Title */}
-          <div style={{textAlign:"center",marginBottom:20}}>
-            <img src={LOGO} alt="RMR Capital" style={{height:50,objectFit:"contain",filter:"invert(40%) sepia(10%) saturate(500%) hue-rotate(160deg)",marginBottom:8}}/>
-            <div style={{fontSize:18,fontWeight:800,color:C.dark,letterSpacing:0.3}}>PROYECTO OMEGA</div>
-            <div style={{fontSize:11,color:C.mid}}>Bodegas Guadalajara — Modelo de Valuación Interactivo</div>
-          </div>
-
-          {/* Descripción */}
-          <div style={{marginBottom:24}}>
-            <div style={{fontSize:14,fontWeight:700,color:C.dark,marginBottom:8,display:"flex",alignItems:"center",gap:8,borderBottom:"2px solid "+C.accent,paddingBottom:8}}><span style={badge(C.dark)}>01</span>Descripción del Ejercicio</div>
-            <p style={{fontSize:12,color:C.black,lineHeight:1.7}}>
-              Modelo interactivo para la valuación de un portafolio de bodegas ubicadas en la zona metropolitana de Guadalajara. El ejercicio evalúa el valor presente del portafolio bajo dos escenarios: (1) venta inmediata sin operar los activos ("Valor s/ Operación"), donde el valor se determina por el VP de los flujos de NOI proyectados más un valor terminal descontado; y (2) operación y venta en diferentes horizontes de tiempo ("Valor c/ Operación"), donde se acumula el VP del NOI generado durante la operación más el VP del valor de salida al momento de una potencial venta. Ambos escenarios incorporan un ajuste de medio año (Mid-Year Convention) y permiten sensibilizar las variables clave del negocio y de valuación en tiempo real.
-            </p>
-          </div>
-
-          {/* Instrucciones */}
-          <div style={{marginBottom:24}}>
-            <div style={{fontSize:14,fontWeight:700,color:C.dark,marginBottom:8,display:"flex",alignItems:"center",gap:8,borderBottom:"2px solid "+C.accent,paddingBottom:8}}><span style={badge(C.dark)}>02</span>Instrucciones de Uso</div>
-            <p style={{fontSize:12,color:C.black,lineHeight:1.7,marginBottom:10}}>El panel de <strong>Supuestos</strong> permite modificar los parámetros del modelo:</p>
-            <div style={{background:C.bg,borderRadius:8,padding:"12px 16px",marginBottom:10}}>
-              <div style={{marginBottom:8}}><strong style={{color:C.dark}}>Selección de Activos:</strong> <span style={{color:C.black,fontSize:12}}>Activa o desactiva cada bodega del portafolio para evaluar combinaciones específicas de activos.</span></div>
-              <div style={{marginBottom:8}}><strong style={{color:C.dark}}>Δ Precio Renta (%):</strong> <span style={{color:C.black,fontSize:12}}>Ajusta la variación sobre el precio base de renta por m² (rango: −10% a +15%).</span></div>
-              <div style={{marginBottom:8}}><strong style={{color:C.dark}}>Ocupación (%):</strong> <span style={{color:C.black,fontSize:12}}>Define el porcentaje de ocupación asumido para el portafolio (rango: 0% a 100%).</span></div>
-              <div style={{marginBottom:8}}><strong style={{color:C.dark}}>OpEx + G&A (% Ing):</strong> <span style={{color:C.black,fontSize:12}}>Establece los gastos operativos y de administración como porcentaje de los ingresos brutos.</span></div>
-              <div style={{marginBottom:8}}><strong style={{color:C.dark}}>Tasa de Descuento:</strong> <span style={{color:C.black,fontSize:12}}>Costo de capital utilizado para descontar los flujos futuros (rango: 9.0% a 15.0%).</span></div>
-              <div><strong style={{color:C.dark}}>Cap Rate:</strong> <span style={{color:C.black,fontSize:12}}>Tasa de capitalización utilizada para calcular el valor terminal y los valores de salida (rango: 7.5% a 10.0%).</span></div>
-            </div>
-            <p style={{fontSize:12,color:C.black,lineHeight:1.7}}>
-              Los resultados se actualizan automáticamente al modificar cualquier supuesto. Las tres pestañas inferiores muestran: un resumen comparativo side-by-side, el detalle de valuación sin operación, y el detalle de valuación con operación. Las celdas resaltadas en verde indican los rangos de Tasa de Descuento (12.0%–14.0%) y Cap Rate (8.5%–9.5%) que representan los parámetros más probables de valuación por parte de inversionistas institucionales en el mercado mexicano.
-            </p>
-          </div>
-
-          {/* Disclaimer */}
-          <div>
-            <div style={{fontSize:14,fontWeight:700,color:C.dark,marginBottom:8,display:"flex",alignItems:"center",gap:8,borderBottom:"2px solid "+C.accent,paddingBottom:8}}><span style={badge(C.accent)}>!</span>Aviso Legal</div>
-            <div style={{background:C.bg,borderRadius:8,padding:"14px 18px",fontSize:11,color:C.dark,lineHeight:1.8,borderLeft:"3px solid "+C.accent}}>
-              <p style={{marginBottom:10}}>Este documento ha sido preparado por RMR Capital exclusivamente con fines informativos e indicativos. La información, supuestos, proyecciones y resultados aquí presentados no constituyen una oferta, solicitud, recomendación ni asesoría de inversión de ningún tipo. Los valores y rendimientos proyectados se basan en estimaciones y supuestos que pueden no materializarse y no representan una garantía de desempeño futuro. Los resultados reales pueden diferir materialmente de las proyecciones presentadas.</p>
-              <p style={{marginBottom:10}}>Este material es estrictamente confidencial y es propiedad exclusiva de RMR Capital. Queda prohibida su reproducción, distribución o divulgación total o parcial a terceros sin la autorización previa y por escrito de RMR Capital. Al acceder a este documento, el receptor acepta mantener la confidencialidad de su contenido y utilizarlo únicamente para los fines autorizados por RMR Capital.</p>
-              <p>RMR Capital no asume responsabilidad alguna por decisiones de inversión tomadas con base en la información aquí contenida. Se recomienda a los potenciales inversionistas realizar su propio análisis independiente y consultar a sus asesores legales, fiscales y financieros antes de tomar cualquier decisión de inversión.</p>
-            </div>
-          </div>
+            <div style={{fontSize:11,fontWeight:700,color:C.dark,marginBottom:6}}>Flujos Anuales Proyectados</div>
+            <div style={{overflowX:"auto"}}><table style={S.tbl}><thead><tr><th style={S.thL}>Concepto</th>{[1,2,3,4,5,6,7,8,9,10].map(function(y){return<th key={y} style={S.th}>Año {y}</th>})}</tr></thead><tbody><tr><td style={S.tdL}>Flujo Neto</td>{bm.cf.slice(1).map(function(v,i){return<td key={i} style={Object.assign({},S.td,{color:v<0?"#cc3333":C.green})}>{fmt(v,"currencyM")}</td>})}</tr><tr style={S.hi}><td style={S.tdL}>IRR Acumulado</td>{bm.cf.slice(1).map(function(_,i){var sub=bm.cf.slice(0,i+2);var ir=0;try{ir=calcIRR(sub)}catch(e){ir=999}return<td key={i} style={S.td}>{fmtIRR(ir)}</td>})}</tr></tbody></table></div>
+          </div>)}
         </div>
+        <div style={{textAlign:"center",padding:"8px 0",fontSize:10,color:C.mid}}>Proyecto Omega — Análisis Comprador | Marzo 2026</div>
       </div>
-    )}
-  </div>
-  );
+    </div>)}
+  </div>);
 }
-
 ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+
 </script>
 </body>
 </html>
